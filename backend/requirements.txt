@@ -1,3 +1,6 @@
 fastapi[standard]>=0.136.3
+sqlmodel>=0.0.38
 sqlalchemy>=2.0.50
 psycopg[binary]>=3.1.19
+pwdlib[argon2]>=0.3.0
+pyjwt>=2.13.0

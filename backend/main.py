@@ -1,24 +1,19 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from sqlmodel import SQLModel
 
-from .database import Base, engine
-from .routes import router as routes_router
+from .database import engine
+from .api import router as api_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    SQLModel.metadata.create_all(bind=engine)
     yield
     engine.dispose()
 
 
-app = FastAPI(title="Transio Backend", lifespan=lifespan)
+app = FastAPI(title="Transio Server", lifespan=lifespan)
 
-
-@app.get("/")
-def read_root():
-    return {"status": "ok"}
-
-
-app.include_router(routes_router)
+app.include_router(api_router)
