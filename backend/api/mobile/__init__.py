@@ -1,20 +1,11 @@
-from fastapi import APIRouter
-from pydantic import BaseModel
+"""Mobile Application API routes"""
 
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/mobile", tags=["Mobile App Endpoints"])
 
+from .login import router as login_routes
+router.include_router(login_routes)
 
-class LoginRequest(BaseModel):
-    username: str
-    password: str
-
-
-@router.post("/login")
-async def login(login_request: LoginRequest):
-    return {"message": "Login successful"}
-
-
-@router.get("/profile")
-async def get_profile():
-    return {"message": "User profile data"}
+from .profile import router as profile_routes
+router.include_router(profile_routes)
