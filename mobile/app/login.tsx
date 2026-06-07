@@ -2,19 +2,30 @@ import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { Appbar, Button, TextInput, Text, useTheme } from "react-native-paper";
 import { useRouter } from "expo-router";
+import { login } from "@/helpers/login";
 
 export default function Login() {
   const theme = useTheme();
   const router = useRouter();
+
+  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [hidePassword, setHidePassword] = useState(true);
 
-  const handleLogin = () => {
-    // Handle login logic here
-    console.log("Login with:", email, password);
-    // Navigate to home after login
-    router.replace("/");
+  const handleLogin = async () => {
+    setLoading(true);
+
+    try {
+      await login({ email, password });
+
+      router.replace("/");
+    } catch (error) {
+      console.error("Login failed:", error);
+      alert(error instanceof Error ? error.message : "An unknown error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,7 +59,7 @@ export default function Login() {
           keyboardType="email-address"
           placeholder="Enter your email"
           style={{ marginBottom: 16 }}
-          disabled={false}
+          disabled={loading}
         />
 
         <TextInput
@@ -65,12 +76,14 @@ export default function Login() {
             />
           }
           style={{ marginBottom: 24 }}
+          disabled={loading}
         />
 
         <Button
           mode="contained"
           onPress={handleLogin}
           style={{ marginBottom: 16 }}
+          loading={loading}
         >
           Sign In
         </Button>
@@ -81,6 +94,7 @@ export default function Login() {
             mode="text"
             onPress={() => router.push("/signup")}
             style={{ marginLeft: -8 }}
+            disabled={loading}
           >
             Sign Up
           </Button>
@@ -89,6 +103,7 @@ export default function Login() {
         <Button
           mode="text"
           onPress={() => console.log("Forgot password")}
+          disabled={loading}
         >
           Forgot Password?
         </Button>

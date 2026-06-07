@@ -10,6 +10,8 @@ import {
   DarkTheme as NavDarkTheme
 } from '@react-navigation/native';
 import { Stack } from "expo-router";
+import { Provider as JotaiProvider } from "jotai";
+import { atomStore } from "@/atoms";
 
 const lightTheme = {
   ...LightTheme,
@@ -46,12 +48,16 @@ export default function RootLayout() {
   const paperTheme = colorScheme === 'dark' ? darkTheme : lightTheme;
   const navTheme = colorScheme === 'dark' ? NavDarkTheme : NavLightTheme;
 
-  return <PaperProvider theme={paperTheme}>
-    <NavThemeProvider value={navTheme}>
-      <Stack screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: paperTheme.colors.background },
-      }} />
-    </NavThemeProvider>
-  </PaperProvider>;
+  return (
+    <JotaiProvider store={atomStore}>
+      <PaperProvider theme={paperTheme}>
+        <NavThemeProvider value={navTheme}>
+          <Stack screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: paperTheme.colors.background },
+          }} />
+        </NavThemeProvider>
+      </PaperProvider>
+    </JotaiProvider>
+  );
 }
