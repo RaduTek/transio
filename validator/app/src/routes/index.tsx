@@ -1,17 +1,18 @@
-import { AppBar, Button, Toolbar, Typography } from '@mui/material'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Navigate } from '@tanstack/react-router'
+import { useAtomValue } from 'jotai'
+import { testModeAtom } from '../atoms'
 
 export const Route = createFileRoute('/')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  return <>
-    <AppBar position='sticky'>
-      <Toolbar>
-        <Typography variant='h6'>Validator</Typography>
-      </Toolbar>
-    </AppBar>
-    <Button variant="contained">Button</Button>
-  </>
+  const testMode = useAtomValue(testModeAtom)
+
+  if (testMode) {
+    console.warn('Running in test mode, redirecting to test menu...')
+    return <Navigate to='/testmenu' />
+  }
+
+  return <>Hello, World!</>
 }

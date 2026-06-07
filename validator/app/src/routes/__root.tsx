@@ -1,3 +1,4 @@
+import CssBaseline from '@mui/material/CssBaseline'
 import { Outlet, createRootRoute } from '@tanstack/react-router'
 
 export const Route = createRootRoute({
@@ -7,6 +8,7 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <>
+      <CssBaseline />
       <Outlet />
     </>
   )

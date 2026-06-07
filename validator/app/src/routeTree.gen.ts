@@ -9,38 +9,80 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ValidatorMainRouteImport } from './routes/validatorMain'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as testingTestmenuRouteImport } from './routes/(testing)/testmenu'
+import { Route as testingSysteminfoRouteImport } from './routes/(testing)/systeminfo'
 
+const ValidatorMainRoute = ValidatorMainRouteImport.update({
+  id: '/validatorMain',
+  path: '/validatorMain',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const testingTestmenuRoute = testingTestmenuRouteImport.update({
+  id: '/(testing)/testmenu',
+  path: '/testmenu',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const testingSysteminfoRoute = testingSysteminfoRouteImport.update({
+  id: '/(testing)/systeminfo',
+  path: '/systeminfo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/validatorMain': typeof ValidatorMainRoute
+  '/systeminfo': typeof testingSysteminfoRoute
+  '/testmenu': typeof testingTestmenuRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/validatorMain': typeof ValidatorMainRoute
+  '/systeminfo': typeof testingSysteminfoRoute
+  '/testmenu': typeof testingTestmenuRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/validatorMain': typeof ValidatorMainRoute
+  '/(testing)/systeminfo': typeof testingSysteminfoRoute
+  '/(testing)/testmenu': typeof testingTestmenuRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/validatorMain' | '/systeminfo' | '/testmenu'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/validatorMain' | '/systeminfo' | '/testmenu'
+  id:
+    | '__root__'
+    | '/'
+    | '/validatorMain'
+    | '/(testing)/systeminfo'
+    | '/(testing)/testmenu'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ValidatorMainRoute: typeof ValidatorMainRoute
+  testingSysteminfoRoute: typeof testingSysteminfoRoute
+  testingTestmenuRoute: typeof testingTestmenuRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/validatorMain': {
+      id: '/validatorMain'
+      path: '/validatorMain'
+      fullPath: '/validatorMain'
+      preLoaderRoute: typeof ValidatorMainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +90,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(testing)/testmenu': {
+      id: '/(testing)/testmenu'
+      path: '/testmenu'
+      fullPath: '/testmenu'
+      preLoaderRoute: typeof testingTestmenuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(testing)/systeminfo': {
+      id: '/(testing)/systeminfo'
+      path: '/systeminfo'
+      fullPath: '/systeminfo'
+      preLoaderRoute: typeof testingSysteminfoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ValidatorMainRoute: ValidatorMainRoute,
+  testingSysteminfoRoute: testingSysteminfoRoute,
+  testingTestmenuRoute: testingTestmenuRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

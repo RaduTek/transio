@@ -1,23 +1,39 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createRouter, RouterProvider } from '@tanstack/react-router'
+import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
 
 import '@fontsource/roboto/300.css'
 import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
+import { createTheme, ThemeProvider } from '@mui/material'
 
+const routerHistory = createMemoryHistory()
 
 const router = createRouter({
+  history: routerHistory,
   routeTree,
   defaultPreload: 'intent',
-  scrollRestoration: true, 
-});
+  scrollRestoration: true,
+})
 
+const theme = createTheme({
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 1,
+      md: 2,
+      lg: 9999,
+      xl: 9999,
+    },
+  }
+})
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <ThemeProvider theme={theme}>
+      <RouterProvider router={router} />
+    </ThemeProvider>
   </StrictMode>,
 )
