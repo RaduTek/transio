@@ -8,6 +8,7 @@ import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
 import { createTheme, ThemeProvider } from '@mui/material'
+import { pn532MifareScannerService } from './services/pn532MifareScanner'
 
 const routerHistory = createMemoryHistory()
 
@@ -29,6 +30,8 @@ const theme = createTheme({
     },
   }
 })
+
+pn532MifareScannerService.start()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
