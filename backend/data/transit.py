@@ -31,35 +31,35 @@ class TransitCategory(SQLModel, table=True):
     private_notes: str | None = Field(default=None, description="Internal notes not visible to customers")
 
 
-class TransitMetaRoute(SQLModel, table=True):
-    __tablename__: ClassVar[str] = "transit_meta_routes"
-
-    id: str = Field(default_factory=generate_uuid, primary_key=True, index=True)
-    code: str = Field(max_length=32, unique=True)
-    name: str = Field(max_length=255)
-    category_id: str = Field(foreign_key="transit_categories.id", index=True)
-
-    description: str | None = Field(default=None, description="Public description of the meta-route")
-    private_notes: str | None = Field(default=None, description="Internal notes not visible to customers")
-
-
 class TransitRoute(SQLModel, table=True):
     __tablename__: ClassVar[str] = "transit_routes"
 
     id: str = Field(default_factory=generate_uuid, primary_key=True, index=True)
     code: str = Field(max_length=32, unique=True)
     name: str = Field(max_length=255)
-    meta_route_id: str = Field(foreign_key="transit_meta_routes.id", index=True)
+    category_id: str = Field(foreign_key="transit_categories.id", index=True)
 
     description: str | None = Field(default=None, description="Public description of the route")
     private_notes: str | None = Field(default=None, description="Internal notes not visible to customers")
 
 
-class TransitRouteStop(SQLModel, table=True):
-    __tablename__: ClassVar[str] = "transit_route_stops"
+class TransitSubRoute(SQLModel, table=True):
+    __tablename__: ClassVar[str] = "transit_subroutes"
 
     id: str = Field(default_factory=generate_uuid, primary_key=True, index=True)
-    route_id: str = Field(foreign_key="transit_routes.id", index=True)
+    code: str = Field(max_length=32, unique=True)
+    name: str = Field(max_length=255)
+    parent_route_id: str = Field(foreign_key="transit_routes.id", index=True)
+
+    description: str | None = Field(default=None, description="Public description of the subroute")
+    private_notes: str | None = Field(default=None, description="Internal notes not visible to customers")
+
+
+class TransitSubRouteStop(SQLModel, table=True):
+    __tablename__: ClassVar[str] = "transit_subroute_stops"
+
+    id: str = Field(default_factory=generate_uuid, primary_key=True, index=True)
+    subroute_id: str = Field(foreign_key="transit_subroutes.id", index=True)
     stop_id: str = Field(foreign_key="transit_stops.id", index=True)
     stop_order: int = Field(index=True, description="The order of the stop within the route")
 
