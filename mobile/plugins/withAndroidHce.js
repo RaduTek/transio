@@ -1,5 +1,4 @@
 const {
-  AndroidConfig,
   createRunOncePlugin,
   withAndroidManifest,
   withDangerousMod,
@@ -49,6 +48,7 @@ function addUsesFeature(manifest, featureName) {
 }
 
 function ensureHceService(mainApplication) {
+  mainApplication.$ = mainApplication.$ || {};
   mainApplication.service = ensureArray(mainApplication.service);
 
   const exists = mainApplication.service.some(
@@ -93,6 +93,18 @@ function ensureHceService(mainApplication) {
   }
 }
 
+function getMainApplication(manifest) {
+  manifest.application = ensureArray(manifest.application);
+
+  if (!manifest.application[0]) {
+    manifest.application.push({ $: {} });
+  }
+
+  manifest.application[0].$ = manifest.application[0].$ || {};
+
+  return manifest.application[0];
+}
+
 function buildAidListXml(aids, requireDeviceUnlock) {
   const filters = aids
     .map((aid) => `    <aid-filter android:name="${aid}" />`)
@@ -118,7 +130,7 @@ function withAndroidHce(config, props = {}) {
     addUsesPermission(manifest, "android.permission.NFC");
     addUsesFeature(manifest, "android.hardware.nfc.hce");
 
-    const mainApplication = AndroidConfig.Manifest.getMainApplicationOrThrow(manifest);
+    const mainApplication = getMainApplication(manifest);
     ensureHceService(mainApplication);
 
     return configWithManifest;
