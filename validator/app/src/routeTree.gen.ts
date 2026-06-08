@@ -13,6 +13,7 @@ import { Route as ValidatorMainRouteImport } from './routes/validatorMain'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as testingTestmenuRouteImport } from './routes/(testing)/testmenu'
 import { Route as testingSysteminfoRouteImport } from './routes/(testing)/systeminfo'
+import { Route as testingNfctestRouteImport } from './routes/(testing)/nfctest'
 
 const ValidatorMainRoute = ValidatorMainRouteImport.update({
   id: '/validatorMain',
@@ -34,16 +35,23 @@ const testingSysteminfoRoute = testingSysteminfoRouteImport.update({
   path: '/systeminfo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const testingNfctestRoute = testingNfctestRouteImport.update({
+  id: '/(testing)/nfctest',
+  path: '/nfctest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/validatorMain': typeof ValidatorMainRoute
+  '/nfctest': typeof testingNfctestRoute
   '/systeminfo': typeof testingSysteminfoRoute
   '/testmenu': typeof testingTestmenuRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/validatorMain': typeof ValidatorMainRoute
+  '/nfctest': typeof testingNfctestRoute
   '/systeminfo': typeof testingSysteminfoRoute
   '/testmenu': typeof testingTestmenuRoute
 }
@@ -51,18 +59,20 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/validatorMain': typeof ValidatorMainRoute
+  '/(testing)/nfctest': typeof testingNfctestRoute
   '/(testing)/systeminfo': typeof testingSysteminfoRoute
   '/(testing)/testmenu': typeof testingTestmenuRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/validatorMain' | '/systeminfo' | '/testmenu'
+  fullPaths: '/' | '/validatorMain' | '/nfctest' | '/systeminfo' | '/testmenu'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/validatorMain' | '/systeminfo' | '/testmenu'
+  to: '/' | '/validatorMain' | '/nfctest' | '/systeminfo' | '/testmenu'
   id:
     | '__root__'
     | '/'
     | '/validatorMain'
+    | '/(testing)/nfctest'
     | '/(testing)/systeminfo'
     | '/(testing)/testmenu'
   fileRoutesById: FileRoutesById
@@ -70,6 +80,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ValidatorMainRoute: typeof ValidatorMainRoute
+  testingNfctestRoute: typeof testingNfctestRoute
   testingSysteminfoRoute: typeof testingSysteminfoRoute
   testingTestmenuRoute: typeof testingTestmenuRoute
 }
@@ -104,12 +115,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof testingSysteminfoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(testing)/nfctest': {
+      id: '/(testing)/nfctest'
+      path: '/nfctest'
+      fullPath: '/nfctest'
+      preLoaderRoute: typeof testingNfctestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ValidatorMainRoute: ValidatorMainRoute,
+  testingNfctestRoute: testingNfctestRoute,
   testingSysteminfoRoute: testingSysteminfoRoute,
   testingTestmenuRoute: testingTestmenuRoute,
 }

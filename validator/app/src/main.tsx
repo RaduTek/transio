@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router'
+import { createHashHistory, createRouter, RouterProvider } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
 
 import '@fontsource/roboto/300.css'
@@ -10,7 +10,7 @@ import '@fontsource/roboto/700.css'
 import { createTheme, ThemeProvider } from '@mui/material'
 import { pn532MifareScannerService } from './services/pn532MifareScanner'
 
-const routerHistory = createMemoryHistory()
+const routerHistory = createHashHistory()
 
 const router = createRouter({
   history: routerHistory,
