@@ -7,15 +7,21 @@ import {
   useTheme,
   List,
   Divider,
-  ProgressBar,
 } from "react-native-paper";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { isExpoGoRuntime } from "@/helpers/hce";
 
 export default function TapToScan() {
   const theme = useTheme();
   const router = useRouter();
+  const params = useLocalSearchParams<{
+    status?: "success" | "error";
+    reason?: string;
+  }>();
   const [scaleAnim] = useState(new Animated.Value(0));
   const [opacityAnim] = useState(new Animated.Value(0));
+  const isSuccess = params.status !== "error";
+  const isExpoGo = isExpoGoRuntime();
 
   useEffect(() => {
     // Animate success indicator
@@ -71,7 +77,7 @@ export default function TapToScan() {
               width: 120,
               height: 120,
               borderRadius: 60,
-              backgroundColor: "#4CAF50",
+              backgroundColor: isSuccess ? "#4CAF50" : "#D32F2F",
               justifyContent: "center",
               alignItems: "center",
             }}
@@ -82,7 +88,7 @@ export default function TapToScan() {
                 color: "#fff",
               }}
             >
-              ✓
+              {isSuccess ? "✓" : "!"}
             </Text>
           </View>
         </Animated.View>
@@ -92,10 +98,10 @@ export default function TapToScan() {
           style={{
             fontWeight: "bold",
             marginTop: 24,
-            color: "#4CAF50",
+            color: isSuccess ? "#4CAF50" : "#D32F2F",
           }}
         >
-          Tap Successful!
+          {isSuccess ? "Tap Successful!" : "Tap Failed"}
         </Text>
         <Text
           variant="bodyLarge"
@@ -105,9 +111,31 @@ export default function TapToScan() {
             textAlign: "center",
           }}
         >
-          Your ticket has been validated
+          {isSuccess
+            ? "Your ticket has been validated"
+            : params.reason === "missing-token"
+            ? "No NFC token was found in secure storage"
+            : "HCE could not complete this tap"}
         </Text>
       </View>
+
+      {isExpoGo && (
+        <Card
+          style={{
+            marginHorizontal: 16,
+            marginBottom: 16,
+            backgroundColor: "#FFF4E5",
+            borderLeftWidth: 4,
+            borderLeftColor: "#FF9800",
+          }}
+        >
+          <Card.Content>
+            <Text variant="bodyMedium" style={{ color: "#8D5D00" }}>
+              HCE is disabled in Expo Go. Use your Android development or production build to test tap emulation.
+            </Text>
+          </Card.Content>
+        </Card>
+      )}
 
       {/* Trip Details */}
       <Card
@@ -257,7 +285,7 @@ export default function TapToScan() {
             variant="bodyMedium"
             style={{ color: "#2E7D32", textAlign: "center" }}
           >
-            You're all set! Enjoy your trip. Your boarding pass is saved in your account.
+            You are all set! Enjoy your trip. Your boarding pass is saved in your account.
           </Text>
         </Card.Content>
       </Card>

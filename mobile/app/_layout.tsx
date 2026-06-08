@@ -9,9 +9,11 @@ import {
   DefaultTheme as NavLightTheme,
   DarkTheme as NavDarkTheme
 } from '@react-navigation/native';
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { Provider as JotaiProvider } from "jotai";
 import { atomStore } from "@/atoms";
+import { useEffect, useRef } from "react";
+import { initializeHceListener } from "@/helpers/hce";
 
 const lightTheme = {
   ...LightTheme,
@@ -47,6 +49,34 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const paperTheme = colorScheme === 'dark' ? darkTheme : lightTheme;
   const navTheme = colorScheme === 'dark' ? NavDarkTheme : NavLightTheme;
+  const router = useRouter();
+  const lastFeedbackTimestampRef = useRef(0);
+
+  useEffect(() => {
+    const hce = initializeHceListener((result) => {
+      const now = Date.now();
+
+      // Readers may send multiple APDUs for one tap; throttle UI feedback navigation.
+      if (now - lastFeedbackTimestampRef.current < 2000) {
+        return;
+      }
+
+      lastFeedbackTimestampRef.current = now;
+
+      router.push({
+        pathname: "/taptoscan",
+        params: {
+          status: result.success ? "success" : "error",
+          reason: result.reason ?? "",
+          at: String(now),
+        },
+      });
+    });
+
+    return () => {
+      hce.cleanup();
+    };
+  }, [router]);
 
   return (
     <JotaiProvider store={atomStore}>
