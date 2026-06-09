@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, field_validator
 from sqlmodel import Session, select
 
-from backend.data.assets import Device
+from backend.data.assets import Device, Vehicle
 from backend.data.auth import AuthMode, CustomerAuth
 from backend.data.ticketing import IssuedTicket, TicketCategory, TicketType, TicketValidation
 from backend.data.transit import TransitShift
@@ -40,6 +40,12 @@ class ValidateCardResponse(BaseModel):
 	ticket: IssuedTicket
 	ticket_type: TicketType
 	transit_shift: TransitShift
+
+
+class ValidatorStateResponse(BaseModel):
+	device: Device
+	vehicle: Vehicle | None
+	transit_shift: TransitShift | None
 
 
 def _is_auth_valid(customer_auth: CustomerAuth, now: datetime) -> bool:
@@ -99,6 +105,32 @@ def _get_active_shift_for_device(
 		raise HTTPException(status_code=403, detail="No active transit shift for this device")
 
 	return active_shift
+
+
+@router.get("/state")
+def get_validator_state(
+	device: Device = Depends(get_current_device),
+	db_session: Session = Depends(get_session),
+) -> ValidatorStateResponse:
+	vehicle: Vehicle | None = None
+	active_shift: TransitShift | None = None
+
+	if device.vehicle_id:
+		vehicle_stmt = select(Vehicle).where(Vehicle.id == device.vehicle_id).limit(1)
+		vehicle = db_session.exec(vehicle_stmt).first()
+
+		if vehicle:
+			shift_stmt = select(TransitShift).where(
+				TransitShift.vehicle_id == vehicle.id,
+				TransitShift.shift_end.is_(None),
+			).limit(1)
+			active_shift = db_session.exec(shift_stmt).first()
+
+	return ValidatorStateResponse(
+		device=device,
+		vehicle=vehicle,
+		transit_shift=active_shift,
+	)
 
 
 @router.post("/validate")
