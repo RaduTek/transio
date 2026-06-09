@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends
 
-from backend.data.equipment import Device
+from backend.data.assets import Device
 
 from .auth import get_current_device
 

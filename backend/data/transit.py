@@ -5,7 +5,7 @@ from typing import ClassVar
 from sqlmodel import Field, SQLModel
 
 from backend.data import generate_uuid
-from backend.data.equipment import VehicleType
+from backend.data.assets import VehicleType
 
 
 class TransitStop(SQLModel, table=True):

@@ -46,6 +46,7 @@ class Device(SQLModel, table=True):
     id: str = Field(default_factory=generate_uuid, primary_key=True, index=True)
     code: str = Field(max_length=32, unique=True)
     device_type: DeviceType = Field(max_length=32)
+    vehicle_id: str = Field()
 
     description: str | None = Field(default=None, description="Public description of the device")
     private_notes: str | None = Field(default=None, description="Internal notes not visible to customers")

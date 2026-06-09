@@ -6,7 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlmodel import Session, select
 
 from backend.data.auth import AuthMode, DeviceAuth
-from backend.data.equipment import Device
+from backend.data.assets import Device
 from backend.database import get_session
 
 

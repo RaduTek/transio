@@ -6,7 +6,7 @@ from typing import ClassVar
 from sqlmodel import Field, SQLModel
 
 from backend.data import generate_uuid
-import backend.data.equipment as equipment
+import backend.data.assets as assets
 import backend.data.users as users
 
 
