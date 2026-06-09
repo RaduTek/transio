@@ -1,5 +1,6 @@
 """Models for transit management, including stops, routes, and route-stop associations."""
 
+from datetime import datetime
 from enum import Enum
 from typing import ClassVar
 from sqlmodel import Field, SQLModel
@@ -65,3 +66,14 @@ class TransitSubRouteStop(SQLModel, table=True):
 
     description: str | None = Field(default=None, description="Public description of the route-stop association")
     private_notes: str | None = Field(default=None, description="Internal notes not visible to customers")
+
+
+class TransitShift(SQLModel, table=True):
+    __tablename__: ClassVar[str] = "transit_shifts"
+
+    id: str = Field(default_factory=generate_uuid, primary_key=True, index=True)
+    vehicle_id: str = Field(foreign_key="vehicles.id", index=True)
+    route_id: str = Field(foreign_key="transit_routes.id", index=True)
+    subroute_id: str | None = Field(default=None, foreign_key="transit_subroutes.id", index=True)
+    shift_start: datetime = Field(max_length=26, description="Start time of the shift in ISO 8601 format")
+    shift_end: datetime | None = Field(default=None, max_length=26, description="End time of the shift in ISO 8601 format")
