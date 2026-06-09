@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from backend.data.transit import (
     TransitCategory,
     TransitRoute,
+    TransitShift,
     TransitStop,
     TransitSubRoute,
     TransitSubRouteStop,
@@ -116,6 +117,92 @@ def delete_stop(
     stop = _get_by_id_or_404(db_session, TransitStop, stop_id, "Transit stop not found")
 
     db_session.delete(stop)
+    db_session.commit()
+
+
+# endregion
+
+
+# region Transit shifts
+
+@router.get("/shifts")
+def get_shifts(db_session: Session = Depends(get_session)) -> list[TransitShift]:
+    """Get transit shifts."""
+
+    stmt = select(TransitShift).order_by(TransitShift.shift_start.desc())
+
+    return list(db_session.exec(stmt).all())
+
+
+@router.get("/shifts/{shift_id}")
+def get_shift(
+    shift_id: str,
+    db_session: Session = Depends(get_session)
+) -> TransitShift | None:
+    """Get a transit shift by ID."""
+
+    return _get_by_id_or_404(
+        db_session,
+        TransitShift,
+        shift_id,
+        "Transit shift not found",
+    )
+
+
+@router.post("/shifts")
+def create_shift(
+    shift: TransitShift,
+    db_session: Session = Depends(get_session)
+) -> TransitShift:
+    """Create a new transit shift."""
+
+    db_session.add(shift)
+    db_session.commit()
+    db_session.refresh(shift)
+
+    return shift
+
+
+@router.patch("/shifts/{shift_id}")
+def update_shift(
+    shift_id: str,
+    shift_data: TransitShift,
+    db_session: Session = Depends(get_session)
+) -> TransitShift | None:
+    """Update a transit shift."""
+
+    shift = _get_by_id_or_404(
+        db_session,
+        TransitShift,
+        shift_id,
+        "Transit shift not found",
+    )
+
+    for field, value in shift_data.model_dump(exclude_unset=True).items():
+        setattr(shift, field, value)
+
+    db_session.add(shift)
+    db_session.commit()
+    db_session.refresh(shift)
+
+    return shift
+
+
+@router.delete("/shifts/{shift_id}")
+def delete_shift(
+    shift_id: str,
+    db_session: Session = Depends(get_session)
+):
+    """Delete a transit shift."""
+
+    shift = _get_by_id_or_404(
+        db_session,
+        TransitShift,
+        shift_id,
+        "Transit shift not found",
+    )
+
+    db_session.delete(shift)
     db_session.commit()
 
 

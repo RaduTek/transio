@@ -21,3 +21,6 @@ router.include_router(assets_routes, dependencies=[Depends(get_current_token)])
 
 from .users import router as users_routes
 router.include_router(users_routes, dependencies=[Depends(get_current_token)])
+
+from .ticketing import router as ticketing_routes
+router.include_router(ticketing_routes, dependencies=[Depends(get_current_token)])
