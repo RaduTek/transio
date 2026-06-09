@@ -10,3 +10,9 @@ def alive():
 
 from .transit import router as transit_routes
 router.include_router(transit_routes)
+
+from .assets import router as assets_routes
+router.include_router(assets_routes)
+
+from .users import router as users_routes
+router.include_router(users_routes)
