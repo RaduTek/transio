@@ -16,6 +16,7 @@ class AuthMode(str, Enum):
     PHYSICAL_CARD = "Physical Card"
     DIGITAL_CARD = "Digital Card"
     PASSWORD = "Password"
+    KEY = "Key"
     KEYPAIR = "Key Pair"
     OTHER = "Other"
 

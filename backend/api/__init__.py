@@ -5,6 +5,9 @@ router = APIRouter()
 from .admin import router as admin_routes
 router.include_router(admin_routes)
 
+from .device import router as device_routes
+router.include_router(device_routes)
+
 from .mobile import router as mobile_routes
 router.include_router(mobile_routes)
 
