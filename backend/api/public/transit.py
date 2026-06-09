@@ -14,7 +14,7 @@ from backend.data.transit import (
 )
 from backend.database import get_session
 
-router = APIRouter(prefix="/transit", tags=["Transit info routes"])
+router = APIRouter(tags=["Transit info routes"])
 
 
 def _get_by_id_or_404(
