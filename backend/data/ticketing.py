@@ -54,7 +54,7 @@ class IssuedTicket(SQLModel, table=True):
 
     fare_type: FareType = Field(max_length=32)
     final_price: int = Field(description="Final price paid by the customer for the ticket in cents (e.g., 250 for $2.50)")
-    validated_at: datetime = Field(max_length=26, description="Timestamp of the first validation of the ticket (null if never validated)")
+    validated_at: datetime | None = Field(default=None, max_length=26, description="Timestamp of the first validation of the ticket (null if never validated)")
     flagged: bool = Field(default=False, description="Indicates whether the ticket has been flagged for review due to validation issues or suspected fraud")
 
 
@@ -67,3 +67,33 @@ class TicketValidation(SQLModel, table=True):
     vehicle_id: str = Field(foreign_key="vehicles.id", index=True, description="Link to the vehicle where the ticket was validated")
     validated_at: datetime = Field(max_length=26, description="Timestamp of the validation of the ticket")
     validation_result: str = Field(max_length=255, description="Result of the validation (e.g., 'Valid', 'Expired', 'Invalid')")
+
+
+class CustomerWallet(SQLModel, table=True):
+    __tablename__: ClassVar[str] = "customer_wallets"
+
+    id: str = Field(default_factory=generate_uuid, primary_key=True, index=True, max_length=36)
+    customer_id: str = Field(foreign_key="customers.id", unique=True, index=True, description="Link to the customer profile")
+    balance: int = Field(default=0, description="Current balance in the customer's wallet in cents (e.g., 500 for $5.00)")
+    last_topup_at: datetime | None = Field(default=None, max_length=26, description="Timestamp of the last top-up to the wallet (null if never topped up)")
+    active: bool = Field(default=True, description="Indicates whether the wallet is active and can be used for transactions")
+
+
+class WalletTransactionType(str, Enum):
+    """Types of transactions that can occur in a customer's wallet."""
+
+    TOPUP = "Top-up"
+    PURCHASE = "Purchase"
+    REFUND = "Refund"
+    OTHER = "Other"
+
+
+class CustomerWalletTransaction(SQLModel, table=True):
+    __tablename__: ClassVar[str] = "customer_wallet_transactions"
+
+    id: str = Field(default_factory=generate_uuid, primary_key=True, index=True, max_length=36)
+    wallet_id: str = Field(foreign_key="customer_wallets.id", index=True, description="Link to the customer's wallet")
+    amount: int = Field(description="Amount of the transaction in cents (positive for top-ups, negative for purchases)")
+    transaction_type: WalletTransactionType = Field(max_length=32, description="Type of transaction")
+    created_at: datetime = Field(max_length=26, description="Timestamp of when the transaction occurred (ISO 8601 format)")
+    flagged: bool = Field(default=False, description="Indicates whether the transaction has been flagged for review due to suspicious activity or issues")
