@@ -3,7 +3,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import ClassVar
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 from backend.data import generate_uuid
 from backend.data.assets import VehicleType
@@ -18,6 +18,8 @@ class TransitStop(SQLModel, table=True):
     lat: float
     lon: float
     address: str | None = Field(default=None, max_length=255)
+
+    subroute_stops: list["TransitSubRouteStop"] = Relationship(back_populates="stop")
 
 
 class TransitCategory(SQLModel, table=True):
@@ -66,6 +68,8 @@ class TransitSubRouteStop(SQLModel, table=True):
 
     description: str | None = Field(default=None, description="Public description of the route-stop association")
     private_notes: str | None = Field(default=None, description="Internal notes not visible to customers")
+
+    stop: TransitStop = Relationship(back_populates="subroute_stops")
 
 
 class TransitShift(SQLModel, table=True):
