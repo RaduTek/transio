@@ -34,7 +34,7 @@ class Employee(SQLModel, table=True):
     last_name: str = Field(max_length=255)
     active: bool = Field(default=True, description="Indicates whether the account is active")
     role: EmployeeRole = Field(max_length=32)
-    customer_id: str = Field(foreign_key="customers.id", unique=True, index=True, description="Link to the customer profile of the employee")
+    customer_id: str | None = Field(foreign_key="customers.id", unique=True, index=True, description="Link to the customer profile of the employee")
     employment_start_date: date = Field(max_length=10)  # YYYY-MM-DD
 
     customer: Optional["Customer"] = Relationship(back_populates="employee")

@@ -27,7 +27,7 @@ class CustomerAuth(SQLModel, table=True):
     __tablename__: ClassVar[str] = "customer_auths"
 
     id: str = Field(default_factory=generate_uuid, primary_key=True, index=True, max_length=36)
-    customer_id: str = Field(foreign_key="customers.id", unique=True, index=True, description="Link to the customer profile")
+    customer_id: str = Field(foreign_key="customers.id", index=True, description="Link to the customer profile")
     auth_mode: AuthMode = Field(max_length=32)
     auth_details: str = Field(max_length=255, description="Details about the authorization mode (e.g., OAuth provider, SSO domain)")
     created_at: datetime = Field(max_length=26, description="Timestamp of when the authorization was created (ISO 8601 format)")
@@ -41,7 +41,7 @@ class EmployeeAuth(SQLModel, table=True):
     __tablename__: ClassVar[str] = "employee_auths"
 
     id: str = Field(default_factory=generate_uuid, primary_key=True, index=True, max_length=36)
-    employee_id: str = Field(foreign_key="employees.id", unique=True, index=True, description="Link to the employee profile")
+    employee_id: str = Field(foreign_key="employees.id", index=True, description="Link to the employee profile")
     auth_mode: AuthMode = Field(max_length=32)
     auth_details: str = Field(max_length=255, description="Details about the authorization mode (e.g., OAuth provider, SSO domain)")
     created_at: datetime = Field(max_length=26, description="Timestamp of when the authorization was created (ISO 8601 format)")
@@ -55,7 +55,7 @@ class DeviceAuth(SQLModel, table=True):
     __tablename__: ClassVar[str] = "device_auths"
 
     id: str = Field(default_factory=generate_uuid, primary_key=True, index=True, max_length=36)
-    device_id: str = Field(foreign_key="devices.id", unique=True, index=True, description="Link to the device profile")
+    device_id: str = Field(foreign_key="devices.id", index=True, description="Link to the device profile")
     auth_mode: AuthMode = Field(max_length=32)
     auth_details: str = Field(max_length=255, description="Details about the authorization mode (e.g., physical card ID, digital token info)")
     created_at: datetime = Field(max_length=26, description="Timestamp of when the authorization was created (ISO 8601 format)")
