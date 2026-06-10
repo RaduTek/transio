@@ -1,5 +1,5 @@
 import { atomStore, customerAtom } from "@/atoms";
-import { Customer } from "@/types/users";
+import { Customer, ProfileData } from "@/types/users";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "./net";
@@ -12,6 +12,17 @@ export async function fetchCustomer(): Promise<Customer> {
     }
 
     const data: Customer = await response.json();
+    return data;
+}
+
+export async function fetchProfileData(): Promise<ProfileData> {
+    const response = await fetchWithAuth('/profile/data');
+
+    if (!response.ok) {
+        throw new Error(response.body ? await response.text() : "Failed to fetch profile data");
+    }
+
+    const data: ProfileData = await response.json();
     return data;
 }
 

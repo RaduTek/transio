@@ -11,8 +11,9 @@ import {
     useTheme,
 } from "react-native-paper";
 import { Router, useRouter } from "expo-router";
-import { useCustomer } from "@/helpers/customer";
-import { Customer } from "@/types";
+import { useCustomer, fetchProfileData } from "@/helpers/customer";
+import { Customer } from "@/types/users";
+import { useQuery } from "@tanstack/react-query";
 
 interface LoggedInProfileProps {
     theme: MD3Theme;
@@ -21,6 +22,24 @@ interface LoggedInProfileProps {
 }
 
 function LoggedInProfile({theme, router, customer}: LoggedInProfileProps) {
+    const { data: profileData, isLoading: loadingProfile, error } = useQuery({
+        queryKey: ['profileData', customer.id],
+        queryFn: fetchProfileData,
+        staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+        retry: 2,
+    });
+
+    if (error) {
+        console.error("Error fetching profile data:", error);
+    }
+
+    const formatCurrency = (cents: number) => {
+        return `$${(cents / 100).toFixed(2)}`;
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString();
+    };
 
     return <>
         <Appbar.Header>
@@ -41,12 +60,6 @@ function LoggedInProfile({theme, router, customer}: LoggedInProfileProps) {
                         <Text variant="titleLarge" style={{ marginTop: 12, fontWeight: "bold" }}>
                             {customer.first_name} {customer.last_name}
                         </Text>
-                        {/* <Text
-                            variant="bodyMedium"
-                            style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}
-                        >
-                            {userProfile.membershipTier} Member
-                        </Text> */}
                     </View>
                 </Card.Content>
             </Card>
@@ -77,13 +90,55 @@ function LoggedInProfile({theme, router, customer}: LoggedInProfileProps) {
                             fontWeight: "bold",
                         }}
                     >
-                        {/* ${userProfile.cardBalance.toFixed(2)} */}
-                        0
+                        {loadingProfile ? "..." : formatCurrency(profileData?.wallet_balance || 0)}
                     </Text>
                 </Card.Content>
                 <Card.Actions>
                     <Button textColor={theme.colors.onPrimary}>Add Funds</Button>
                 </Card.Actions>
+            </Card>
+
+            {/* Tickets & Passes Section */}
+            <Card 
+                style={{ marginHorizontal: 16, marginBottom: 16 }}
+                onPress={() => {
+                    // TODO: Navigate to tickets page
+                    console.log("Navigate to tickets page");
+                }}
+            >
+                <Card.Title 
+                    title="My Tickets & Passes" 
+                    titleVariant="titleMedium"
+                    right={(props) => <List.Icon {...props} icon="chevron-right" />}
+                />
+                <Divider />
+                <Card.Content>
+                    {loadingProfile ? (
+                        <Text style={{ paddingVertical: 12 }}>Loading...</Text>
+                    ) : (
+                        <>
+                            {profileData?.active_pass ? (
+                                <List.Item
+                                    title="Active Pass"
+                                    description={`${profileData.active_pass.ticket_type_name} • Expires ${formatDate(profileData.active_pass.expires_at)}`}
+                                    left={(props) => <List.Icon {...props} icon="card-account-details" color={theme.colors.primary} />}
+                                />
+                            ) : (
+                                <List.Item
+                                    title="No Active Pass"
+                                    description="Purchase a pass for unlimited rides"
+                                    left={(props) => <List.Icon {...props} icon="card-account-details-outline" />}
+                                />
+                            )}
+                            
+                            <List.Item
+                                title="Valid Tickets"
+                                description={`${profileData?.valid_tickets_count || 0} ticket${profileData?.valid_tickets_count === 1 ? '' : 's'} available`}
+                                left={(props) => <List.Icon {...props} icon="ticket" />}
+                            />
+                        </>
+                    )}
+                </Card.Content>
             </Card>
 
             {/* Account Details */}

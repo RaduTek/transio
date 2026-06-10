@@ -9,3 +9,6 @@ router.include_router(login_routes)
 
 from .profile import router as profile_routes
 router.include_router(profile_routes)
+
+from .ticketing import router as ticketing_routes
+router.include_router(ticketing_routes)
