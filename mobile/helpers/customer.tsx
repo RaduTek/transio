@@ -1,5 +1,5 @@
 import { atomStore, customerAtom } from "@/atoms";
-import { Customer } from "@/types";
+import { Customer } from "@/types/users";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "./net";
