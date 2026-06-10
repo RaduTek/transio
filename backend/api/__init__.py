@@ -16,6 +16,3 @@ router.include_router(public_routes)
 
 from .test import router as test_routes
 router.include_router(test_routes)
-
-from .vehicle import router as vehicle_routes
-router.include_router(vehicle_routes)
