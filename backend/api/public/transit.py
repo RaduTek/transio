@@ -191,11 +191,15 @@ def get_subroute(
     )
 
 
+class SubRouteStopDetails(TransitSubRouteStop):
+    stop: TransitStop
+
+
 @router.get("/subroutes/{subroute_id_or_code}/stops")
 def get_subroute_stops(
     subroute_id_or_code: str,
     db_session: Session = Depends(get_session)
-) -> list[TransitSubRouteStop]:
+) -> list[SubRouteStopDetails]:
     """Get all stop mappings for a transit subroute."""
 
     subroute = _get_by_id_or_code_or_404(
@@ -205,11 +209,20 @@ def get_subroute_stops(
         "Transit subroute not found",
     )
 
-    subroute_stops_stmt = select(TransitSubRouteStop) \
+    subroute_stops_stmt = select(TransitSubRouteStop, TransitStop) \
+        .join(TransitStop, TransitSubRouteStop.stop_id == TransitStop.id) \
         .where(TransitSubRouteStop.subroute_id == subroute.id) \
         .order_by(TransitSubRouteStop.stop_order)
 
-    return list(db_session.exec(subroute_stops_stmt).all())
+    results = db_session.exec(subroute_stops_stmt).all()
+    
+    return [
+        SubRouteStopDetails(
+            **subroute_stop.model_dump(),
+            stop=stop
+        )
+        for subroute_stop, stop in results
+    ]
 
 
 # endregion
