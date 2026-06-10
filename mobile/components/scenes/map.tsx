@@ -5,8 +5,8 @@ import { fetchApi } from '@/helpers/net';
 import { TransitStop } from "@/types/transit";
 
 const INITIAL_REGION = {
-    latitude: 40.7128,
-    longitude: -74.0060,
+    latitude: 45.7461,
+    longitude: 21.2218,
     latitudeDelta: 0.1,
     longitudeDelta: 0.1,
 };
@@ -81,6 +81,7 @@ export default function MapScene() {
                         }}
                         title={stop.name}
                         description={stop.description || stop.address}
+                        pinColor="#0067b0"
                     />
                 ))}
             </MapView>
