@@ -3,8 +3,6 @@ import { getSavedTokenAsync } from "./auth";
 const apiBaseUrl = process.env.EXPO_PUBLIC_MOBILE_API_URL || "http://localhost:8000/mobile";
 
 export function fetchApi(endpoint: string, options?: RequestInit) : Promise<Response> {
-    console.log(process.env);
-    console.log(`Making API request to ${apiBaseUrl}${endpoint} with options:`, options);
     return fetch(`${apiBaseUrl}${endpoint}`, options);
 }
 
