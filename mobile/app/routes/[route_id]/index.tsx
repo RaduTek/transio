@@ -75,7 +75,7 @@ export default function RouteDetailsPage() {
                 />
                 {subRoutes.length > 1 && (
                     <Appbar.Action 
-                        icon="swap-horizontal" 
+                        icon="swap-vertical" 
                         onPress={toggleDirection}
                         disabled={isLoading}
                     />
@@ -88,28 +88,10 @@ export default function RouteDetailsPage() {
                     </View>
                 ) : (
                     <>
-                        {/* Route Information Card */}
-                        {route && (
-                            <Card style={{ margin: 16, backgroundColor: theme.colors.surface }}>
-                                <Card.Content>
-                                    <Text variant="titleLarge" style={{ fontWeight: "bold", marginBottom: 8 }}>
-                                        {route.name}
-                                    </Text>
-                                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                                        Route Code: {route.code}
-                                    </Text>
-                                    {route.description && (
-                                        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: 8 }}>
-                                            {route.description}
-                                        </Text>
-                                    )}
-                                </Card.Content>
-                            </Card>
-                        )}
 
                         {/* Subroute Direction Card */}
                         {selectedSubRoute && (
-                            <Card style={{ marginHorizontal: 16, marginBottom: 16, backgroundColor: theme.colors.primaryContainer }}>
+                            <Card style={{ margin: 16, backgroundColor: theme.colors.primaryContainer }}>
                                 <Card.Content>
                                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                                         <View style={{ flex: 1 }}>
@@ -125,13 +107,6 @@ export default function RouteDetailsPage() {
                                                 </Text>
                                             )}
                                         </View>
-                                        {subRoutes.length > 1 && (
-                                            <IconButton 
-                                                icon="swap-horizontal" 
-                                                onPress={toggleDirection}
-                                                mode="contained-tonal"
-                                            />
-                                        )}
                                     </View>
                                 </Card.Content>
                             </Card>
@@ -161,9 +136,8 @@ export default function RouteDetailsPage() {
                                                         </Text>
                                                     </View>
                                                 )}
-                                                right={(props) => <List.Icon {...props} icon="map-marker" />}
+                                                right={(props) => <List.Icon {...props} icon="timer-sand" />}
                                             />
-                                            {index < stops.length - 1 && <List.Divider />}
                                         </View>
                                     ))}
                                 </Card>

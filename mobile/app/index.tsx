@@ -8,7 +8,7 @@ import ProfileScene from "@/components/scenes/profile";
 const routes = [
   { key: 'routes', title: 'Routes', focusedIcon: 'routes' },
   { key: 'map', title: 'Map', focusedIcon: 'map' },
-  { key: 'search', title: 'Search', focusedIcon: 'magnify' },
+  // { key: 'search', title: 'Search', focusedIcon: 'magnify' },
   { key: 'profile', title: 'Profile', focusedIcon: 'account', unfocusedIcon: 'account-outline' },
 ];
 
