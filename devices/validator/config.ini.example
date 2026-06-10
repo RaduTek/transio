@@ -1,0 +1,24 @@
+# Transio Ticket Validator Configuration File
+# Copy this to config.ini and fill in your values
+# Environment variables take precedence over values in this file
+
+[transio]
+# API configuration
+TRANSIO_API_BASE_URL=http://localhost:8000
+TRANSIO_DEVICE_API_KEY=your-device-api-key-here
+
+# NFC reader connection string (PN532 on USB)
+# Default: tty:USB0:pn532
+TRANSIO_NFC_CONN_STRING=tty:USB0:pn532
+
+# Alternative NFC connection strings (fallback order)
+TRANSIO_NFC_CONN=
+NFC_CLF_CONN=
+
+# Authentication mode for card validation
+# Options: Physical Card, Digital Card
+# Default: Physical Card
+TRANSIO_CARD_AUTH_MODE=Physical Card
+
+# API request timeout in seconds: default 8
+TRANSIO_API_TIMEOUT_SECONDS=8
