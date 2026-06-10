@@ -1,0 +1,5 @@
+pyside6>=6.11.1
+nfcpy>=1.0.4
+requests>=2.32.3
+pyserial>=3.5.0
+pygpsclient>=1.6.10

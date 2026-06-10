@@ -6,6 +6,7 @@ from backend.data.assets import Device
 
 from .auth import get_current_device
 from .validator import router as validator_routes
+from .vehicle import router as vehicle_routes
 
 
 router = APIRouter(prefix="/device", tags=["Device Endpoints"])
@@ -22,3 +23,4 @@ def get_device_info(device: Device = Depends(get_current_device)) -> Device:
 
 
 router.include_router(validator_routes)
+router.include_router(vehicle_routes)

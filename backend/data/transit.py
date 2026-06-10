@@ -77,6 +77,7 @@ class TransitShift(SQLModel, table=True):
 
     id: str = Field(default_factory=generate_uuid, primary_key=True, index=True)
     vehicle_id: str = Field(foreign_key="vehicles.id", index=True)
+    employee_id: str | None = Field(default=None, foreign_key="employees.id", index=True)
     route_id: str = Field(foreign_key="transit_routes.id", index=True)
     subroute_id: str | None = Field(default=None, foreign_key="transit_subroutes.id", index=True)
     shift_start: datetime = Field(max_length=26, description="Start time of the shift in ISO 8601 format")

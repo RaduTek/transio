@@ -1,0 +1,37 @@
+# Transio Vehicle OBC Configuration File
+# Copy this to config.ini and fill in your values
+# Environment variables take precedence over values in this file
+
+[transio]
+# API configuration
+TRANSIO_API_BASE_URL=http://localhost:8000
+TRANSIO_DEVICE_API_KEY=your-device-api-key-here
+
+# NFC reader connection string (PN532 on USB)
+# Default: tty:USB0:pn532
+TRANSIO_NFC_CONN_STRING=tty:USB0:pn532
+
+# GPS device path
+# Default: /dev/ttyACM0
+TRANSIO_GPS_DEVICE=/dev/ttyACM0
+
+# Authentication mode for driver badge login
+# Options: Physical Card, Digital Card
+# Default: Physical Card
+TRANSIO_DRIVER_AUTH_MODE=Physical Card
+
+# Telemetry upload intervals (in seconds)
+# Fast interval while moving: default 10 seconds
+TRANSIO_TELEMETRY_FAST_INTERVAL_SECONDS=10
+
+# Idle interval when vehicle is stationary: default 600 seconds (10 minutes)
+TRANSIO_TELEMETRY_IDLE_INTERVAL_SECONDS=600
+
+# Time to consider vehicle idle before switching to idle interval: default 600 seconds (10 minutes)
+TRANSIO_TELEMETRY_IDLE_AFTER_SECONDS=600
+
+# Speed threshold to consider vehicle moving: default 2.0 km/h
+TRANSIO_MOVING_SPEED_THRESHOLD_KMPH=2.0
+
+# API request timeout in seconds: default 8
+TRANSIO_API_TIMEOUT_SECONDS=8
