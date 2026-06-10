@@ -11,27 +11,17 @@ import {
     useTheme,
 } from "react-native-paper";
 import { Router, useRouter } from "expo-router";
-import { useCustomer, fetchProfileData } from "@/helpers/customer";
-import { Customer } from "@/types/users";
+import { useProfileData, fetchProfileData } from "@/helpers/customer";
+import { Customer, ProfileData } from "@/types/users";
 import { useQuery } from "@tanstack/react-query";
 
 interface LoggedInProfileProps {
     theme: MD3Theme;
     router: Router;
-    customer: Customer;
+    profile: ProfileData;
 }
 
-function LoggedInProfile({theme, router, customer}: LoggedInProfileProps) {
-    const { data: profileData, isLoading: loadingProfile, error } = useQuery({
-        queryKey: ['profileData', customer.id],
-        queryFn: fetchProfileData,
-        staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-        retry: 2,
-    });
-
-    if (error) {
-        console.error("Error fetching profile data:", error);
-    }
+function LoggedInProfile({theme, router, profile}: LoggedInProfileProps) {
 
     const formatCurrency = (cents: number) => {
         return `$${(cents / 100).toFixed(2)}`;
@@ -58,7 +48,7 @@ function LoggedInProfile({theme, router, customer}: LoggedInProfileProps) {
                     <View style={{ alignItems: "center" }}>
                         <Avatar.Image size={80} source={{ uri: "https://via.placeholder.com/80" }} />
                         <Text variant="titleLarge" style={{ marginTop: 12, fontWeight: "bold" }}>
-                            {customer.first_name} {customer.last_name}
+                            {profile.customer.first_name} {profile.customer.last_name}
                         </Text>
                     </View>
                 </Card.Content>
@@ -90,7 +80,7 @@ function LoggedInProfile({theme, router, customer}: LoggedInProfileProps) {
                             fontWeight: "bold",
                         }}
                     >
-                        {loadingProfile ? "..." : formatCurrency(profileData?.wallet_balance || 0)}
+                        {formatCurrency(profile?.wallet_balance || 0)}
                     </Text>
                 </Card.Content>
                 <Card.Actions>
@@ -113,31 +103,25 @@ function LoggedInProfile({theme, router, customer}: LoggedInProfileProps) {
                 />
                 <Divider />
                 <Card.Content>
-                    {loadingProfile ? (
-                        <Text style={{ paddingVertical: 12 }}>Loading...</Text>
+                    {profile?.active_pass ? (
+                        <List.Item
+                            title="Active Pass"
+                            description={`${profile.active_pass.ticket_type_name} • Expires ${formatDate(profile.active_pass.expires_at)}`}
+                            left={(props) => <List.Icon {...props} icon="card-account-details" color={theme.colors.primary} />}
+                        />
                     ) : (
-                        <>
-                            {profileData?.active_pass ? (
-                                <List.Item
-                                    title="Active Pass"
-                                    description={`${profileData.active_pass.ticket_type_name} • Expires ${formatDate(profileData.active_pass.expires_at)}`}
-                                    left={(props) => <List.Icon {...props} icon="card-account-details" color={theme.colors.primary} />}
-                                />
-                            ) : (
-                                <List.Item
-                                    title="No Active Pass"
-                                    description="Purchase a pass for unlimited rides"
-                                    left={(props) => <List.Icon {...props} icon="card-account-details-outline" />}
-                                />
-                            )}
-                            
-                            <List.Item
-                                title="Valid Tickets"
-                                description={`${profileData?.valid_tickets_count || 0} ticket${profileData?.valid_tickets_count === 1 ? '' : 's'} available`}
-                                left={(props) => <List.Icon {...props} icon="ticket" />}
-                            />
-                        </>
+                        <List.Item
+                            title="No Active Pass"
+                            description="Purchase a pass for unlimited rides"
+                            left={(props) => <List.Icon {...props} icon="card-account-details-outline" />}
+                        />
                     )}
+                    
+                    <List.Item
+                        title="Valid Tickets"
+                        description={`${profile?.valid_tickets_count || 0} ticket${profile?.valid_tickets_count === 1 ? '' : 's'} available`}
+                        left={(props) => <List.Icon {...props} icon="ticket" />}
+                    />
                 </Card.Content>
             </Card>
 
@@ -148,41 +132,18 @@ function LoggedInProfile({theme, router, customer}: LoggedInProfileProps) {
                 <Card.Content>
                     <List.Item
                         title="Email"
-                        description={customer.email}
+                        description={profile.customer.email}
                         left={(props) => <List.Icon {...props} icon="email" />}
                     />
                     <List.Item
                         title="Phone"
-                        description={customer.phone}
+                        description={profile.customer.phone}
                         left={(props) => <List.Icon {...props} icon="phone" />}
                     />
                     <List.Item
                         title="Member Since"
-                        description={customer.registered_date ? new Date(customer.registered_date).toLocaleDateString() : "N/A"}
+                        description={profile.customer.registered_date ? new Date(profile.customer.registered_date).toLocaleDateString() : "N/A"}
                         left={(props) => <List.Icon {...props} icon="calendar" />}
-                    />
-                </Card.Content>
-            </Card>
-
-            {/* Transit Benefits */}
-            <Card style={{ marginHorizontal: 16, marginBottom: 16 }}>
-                <Card.Title title="Transit Benefits" titleVariant="titleMedium" />
-                <Divider />
-                <Card.Content>
-                    <List.Item
-                        title="Unlimited Routes"
-                        description="Access to all transit routes"
-                        left={(props) => <List.Icon {...props} icon="check-circle" />}
-                    />
-                    <List.Item
-                        title="Priority Support"
-                        description="24/7 customer support"
-                        left={(props) => <List.Icon {...props} icon="check-circle" />}
-                    />
-                    <List.Item
-                        title="Discount Passes"
-                        description="Exclusive discounts on monthly passes"
-                        left={(props) => <List.Icon {...props} icon="check-circle" />}
                     />
                 </Card.Content>
             </Card>
@@ -279,7 +240,7 @@ export default function ProfileScene() {
     const theme = useTheme();
     const router = useRouter();
 
-    const { customer, loading, loggedIn } = useCustomer();
+    const { profile, loading, loggedIn } = useProfileData();
     
     if (loading) {
         return <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -287,9 +248,9 @@ export default function ProfileScene() {
         </View>;
     }
 
-    if (!loggedIn || customer === null) {
+    if (!loggedIn || profile === null) {
         return <LoggedOutProfile theme={theme} router={router} />;
     }
 
-    return <LoggedInProfile theme={theme} router={router} customer={customer} />;
+    return <LoggedInProfile theme={theme} router={router} profile={profile} />;
 }

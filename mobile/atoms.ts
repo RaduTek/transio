@@ -1,7 +1,7 @@
 import { atom, createStore } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { Customer } from "./types";
+import { ProfileData } from "./types/users";
 
 export const atomStore = createStore();
 
-export const customerAtom = atomWithStorage<Customer | null>("customerData", null);
+export const profileDataAtom = atomWithStorage<ProfileData | null>("customerProfileData", null);

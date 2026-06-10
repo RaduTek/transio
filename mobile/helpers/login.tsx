@@ -1,7 +1,7 @@
 import { Customer } from "@/types/users";
 import { fetchApi, postJSON } from "./net";
 import { saveToken } from "./auth";
-import { atomStore, customerAtom } from "@/atoms";
+import { atomStore, profileDataAtom } from "@/atoms";
 
 export interface LoginRequest {
     email: string;
@@ -32,7 +32,7 @@ export async function login(request: LoginRequest) {
     
     await saveToken(data.token);
 
-    atomStore.set(customerAtom, data.customer);
+    atomStore.set(profileDataAtom, data.customer);
 }
 
 
@@ -47,5 +47,5 @@ export async function signup(request: SignupRequest) {
 
     await saveToken(data.token);
 
-    atomStore.set(customerAtom, data.customer);
+    atomStore.set(profileDataAtom, data.customer);
 }

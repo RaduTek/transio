@@ -1,24 +1,14 @@
-import { atomStore, customerAtom } from "@/atoms";
-import { Customer, ProfileData } from "@/types/users";
+import { atomStore, profileDataAtom } from "@/atoms";
+import { ProfileData } from "@/types/users";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { fetchWithAuth } from "./net";
 
-export async function fetchCustomer(): Promise<Customer> {
-    const response = await fetchWithAuth('/profile/customerInfo');
-
-    if (!response.ok) {
-        throw new Error(response.body ? await response.text() : "Failed to fetch customer data");
-    }
-
-    const data: Customer = await response.json();
-    return data;
-}
-
 export async function fetchProfileData(): Promise<ProfileData> {
-    const response = await fetchWithAuth('/profile/data');
+    const response = await fetchWithAuth('/mobile/profile/data');
 
     if (!response.ok) {
+        console.log("fetchProfileData response:", response);
         throw new Error(response.body ? await response.text() : "Failed to fetch profile data");
     }
 
@@ -26,39 +16,39 @@ export async function fetchProfileData(): Promise<ProfileData> {
     return data;
 }
 
-export interface UseCustomerResult {
-    customer: Customer | null;
+export interface UseProfileDataResult {
+    profile: ProfileData | null;
     loading: boolean;
     error: Error | null;
     loggedIn: boolean;
 }
 
-export function useCustomer(): UseCustomerResult {
-    const customer = useAtomValue(customerAtom);
+export function useProfileData(): UseProfileDataResult {
+    const profile = useAtomValue(profileDataAtom);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if (!customer) {
+        if (!profile) {
             setLoading(true);
             setError(null);
             (async () => {
                 try {
-                    const fetchedCustomer = await fetchCustomer();
-                    atomStore.set(customerAtom, fetchedCustomer);
+                    const fetchedProfile = await fetchProfileData();
+                    atomStore.set(profileDataAtom, fetchedProfile);
                 } catch (error) {
                     if (error instanceof Error && error.name === "UnauthenticatedException") {
-                        console.warn("User is not authenticated, cannot fetch customer data");
+                        console.warn("User is not authenticated, cannot fetch profile data");
                     } else {
-                        console.error("Error fetching customer data:", error);
+                        console.error("Error fetching profile data:", error);
                         setError(error instanceof Error ? error : new Error("An unknown error occurred"));
                     }
-                    atomStore.set(customerAtom, null);
+                    atomStore.set(profileDataAtom, null);
                 }
                 setLoading(false);
             })();
         }
-    }, [customer]);
+    }, [profile]);
 
-    return {customer, loading, error, loggedIn: !!customer?.id};
+    return {profile, loading, error, loggedIn: !!profile?.customer?.id};
 }
