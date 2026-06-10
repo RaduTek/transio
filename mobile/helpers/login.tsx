@@ -1,4 +1,4 @@
-import { Customer } from "@/types";
+import { Customer } from "@/types/users";
 import { fetchApi, postJSON } from "./net";
 import { saveToken } from "./auth";
 import { atomStore, customerAtom } from "@/atoms";
@@ -22,7 +22,7 @@ export interface LoginResponse {
 }
 
 export async function login(request: LoginRequest) {
-    const response = await fetchApi('/login', postJSON(request));
+    const response = await fetchApi('/mobile/login', postJSON(request));
 
     if (!response.ok) {
         throw new Error(response.body ? await response.text() : "Login failed");
@@ -37,7 +37,7 @@ export async function login(request: LoginRequest) {
 
 
 export async function signup(request: SignupRequest) {
-    const response = await fetchApi('/signup', postJSON(request));
+    const response = await fetchApi('/mobile/signup', postJSON(request));
 
     if (!response.ok) {
         throw new Error(response.body ? await response.text() : "Signup failed");
