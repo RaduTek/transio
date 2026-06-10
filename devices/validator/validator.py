@@ -18,7 +18,7 @@ class ValidatorApp(QtWidgets.QWidget):
         self._route_name_cache: dict[str, str] = {}
 
         self.setWindowTitle("Transio Ticket Validator")
-        self.setFixedSize(480, 480)
+        self.setFixedSize(480, 400)
 
         self._build_ui()
         self._setup_api_worker()
