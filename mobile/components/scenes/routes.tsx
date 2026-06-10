@@ -33,7 +33,9 @@ export default function RoutesScene() {
         queryKey: ["transit-categories"],
         queryFn: async () => {
             const response = await fetchApi("/public/categories");
-            return response.json() as Promise<TransitCategory[]>;
+            const data = await response.json();
+            selectedCategoryId || setSelectedCategoryId(data[0]?.id || null);
+            return data as TransitCategory[];
         },
     });
 
