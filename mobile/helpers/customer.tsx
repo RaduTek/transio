@@ -19,6 +19,7 @@ export interface UseCustomerResult {
     customer: Customer | null;
     loading: boolean;
     error: Error | null;
+    loggedIn: boolean;
 }
 
 export function useCustomer(): UseCustomerResult {
@@ -35,8 +36,12 @@ export function useCustomer(): UseCustomerResult {
                     const fetchedCustomer = await fetchCustomer();
                     atomStore.set(customerAtom, fetchedCustomer);
                 } catch (error) {
-                    console.error("Error fetching customer data:", error);
-                    setError(error instanceof Error ? error : new Error("An unknown error occurred"));
+                    if (error instanceof Error && error.name === "UnauthenticatedException") {
+                        console.warn("User is not authenticated, cannot fetch customer data");
+                    } else {
+                        console.error("Error fetching customer data:", error);
+                        setError(error instanceof Error ? error : new Error("An unknown error occurred"));
+                    }
                     atomStore.set(customerAtom, null);
                 }
                 setLoading(false);
@@ -44,5 +49,5 @@ export function useCustomer(): UseCustomerResult {
         }
     }, [customer]);
 
-    return {customer, loading, error};
+    return {customer, loading, error, loggedIn: !!customer?.id};
 }

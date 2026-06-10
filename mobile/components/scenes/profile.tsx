@@ -224,7 +224,7 @@ export default function ProfileScene() {
     const theme = useTheme();
     const router = useRouter();
 
-    const { customer, loading } = useCustomer();
+    const { customer, loading, loggedIn } = useCustomer();
     
     if (loading) {
         return <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -232,9 +232,7 @@ export default function ProfileScene() {
         </View>;
     }
 
-    const isLoggedIn = !!customer?.id;
-
-    if (!isLoggedIn) {
+    if (!loggedIn || customer === null) {
         return <LoggedOutProfile theme={theme} router={router} />;
     }
 
