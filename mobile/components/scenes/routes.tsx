@@ -2,8 +2,9 @@ import { useState } from "react";
 import { ScrollView, View, FlatList } from "react-native";
 import { Appbar, Button, Card, ActivityIndicator, Searchbar, Text, useTheme } from "react-native-paper";
 import { useQuery } from "@tanstack/react-query";
-import { fetchApi } from "../../helpers/net";
-import type { TransitCategory, TransitRoute } from "../../types";
+import { useRouter } from "expo-router";
+import { fetchApi } from "@/helpers/net";
+import type { TransitCategory, TransitRoute } from "@/types/transit";
 
 const ROUTE_COLORS = [
     "#FF6B6B",
@@ -25,6 +26,7 @@ const getRouteColor = (code: string) => {
 
 export default function RoutesScene() {
     const theme = useTheme();
+    const router = useRouter();
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -121,8 +123,7 @@ export default function RoutesScene() {
                                     backgroundColor: theme.colors.surface,
                                 }}
                                 onPress={() => {
-                                    // TODO: Navigate to route details
-                                    console.log("Tapped route:", route.id);
+                                    router.push(`/routes/${route.id}`);
                                 }}
                             >
                                 <Card.Content>
