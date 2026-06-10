@@ -63,13 +63,13 @@ def _get_config_value(config_dict: dict, key: str, fallback: str = "") -> str:
     if env_value is not None:
         return env_value
 
-    return config_dict.get(key, fallback)
+    return config_dict.get(key.lower(), fallback)
 
 
 def _config_float(config_dict: dict, name: str, fallback: float, minimum: float) -> float:
     """Get float configuration value from environment variable first, then config file, then fallback."""
     env_value = os.getenv(name)
-    raw = env_value or config_dict.get(name)
+    raw = env_value or config_dict.get(name.lower())
 
     if raw is None:
         return fallback
