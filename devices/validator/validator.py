@@ -16,9 +16,16 @@ class ValidatorApp(QtWidgets.QWidget):
         super().__init__()
         self._config = config
         self._route_name_cache: dict[str, str] = {}
+        
+        # State tracking
+        self._shift_active = False
+        self._scanner_available = False
+        self._current_route_name = "-"
+        self._last_validation_success = False
 
         self.setWindowTitle("Transio Ticket Validator")
-        self.setFixedSize(480, 400)
+        self.setWindowState(QtCore.Qt.WindowMaximized)
+        self.showFullScreen()
 
         self._build_ui()
         self._setup_api_worker()
@@ -27,6 +34,11 @@ class ValidatorApp(QtWidgets.QWidget):
         self._state_timer = QtCore.QTimer(self)
         self._state_timer.setInterval(30000)
         self._state_timer.timeout.connect(self._request_state)
+        
+        self._time_timer = QtCore.QTimer(self)
+        self._time_timer.setInterval(1000)
+        self._time_timer.timeout.connect(self._update_time)
+        self._time_timer.start()
 
         self._request_state()
         self._state_timer.start()
@@ -34,48 +46,66 @@ class ValidatorApp(QtWidgets.QWidget):
 
     def _build_ui(self) -> None:
         root = QtWidgets.QVBoxLayout(self)
-        root.setContentsMargins(16, 16, 16, 16)
-        root.setSpacing(10)
+        root.setContentsMargins(40, 40, 40, 40)
+        root.setSpacing(20)
 
-        title = QtWidgets.QLabel("Ticket Validator", alignment=QtCore.Qt.AlignCenter)
+        # Top section: Title, time, and route
+        top_layout = QtWidgets.QVBoxLayout()
+        top_layout.setSpacing(15)
+        
+        title = QtWidgets.QLabel("Transio Ticket Validator")
         title_font = QtGui.QFont()
-        title_font.setPointSize(17)
+        title_font.setPointSize(28)
         title_font.setBold(True)
         title.setFont(title_font)
-
-        self._scanner_status = QtWidgets.QLabel("Scanner: idle")
-        self._device_label = QtWidgets.QLabel("Device: -")
-        self._vehicle_label = QtWidgets.QLabel("Vehicle: -")
-        self._shift_label = QtWidgets.QLabel("Shift: -")
+        title.setAlignment(QtCore.Qt.AlignCenter)
+        
+        info_layout = QtWidgets.QHBoxLayout()
+        self._time_label = QtWidgets.QLabel("00:00:00")
+        time_font = QtGui.QFont()
+        time_font.setPointSize(16)
+        self._time_label.setFont(time_font)
+        
         self._route_label = QtWidgets.QLabel("Route: -")
-        self._last_uid_label = QtWidgets.QLabel("Last card UID: -")
+        self._route_label.setFont(time_font)
+        
+        info_layout.addWidget(self._time_label)
+        info_layout.addStretch()
+        info_layout.addWidget(self._route_label)
+        
+        top_layout.addWidget(title)
+        top_layout.addLayout(info_layout)
 
-        self._result_box = QtWidgets.QTextEdit()
-        self._result_box.setReadOnly(True)
-        self._result_box.setPlaceholderText("Validation results will appear here")
+        # Middle section: Status display
+        middle_layout = QtWidgets.QVBoxLayout()
+        middle_layout.addStretch()
+        
+        self._status_label = QtWidgets.QLabel("Initializing...")
+        status_font = QtGui.QFont()
+        status_font.setPointSize(48)
+        status_font.setBold(True)
+        self._status_label.setFont(status_font)
+        self._status_label.setAlignment(QtCore.Qt.AlignCenter)
+        self._status_label.setWordWrap(True)
+        self._status_label.setStyleSheet("color: black;")
+        
+        self._details_label = QtWidgets.QLabel("")
+        details_font = QtGui.QFont()
+        details_font.setPointSize(16)
+        self._details_label.setFont(details_font)
+        self._details_label.setAlignment(QtCore.Qt.AlignCenter)
+        self._details_label.setWordWrap(True)
+        
+        middle_layout.addWidget(self._status_label)
+        middle_layout.addWidget(self._details_label, alignment=QtCore.Qt.AlignTop)
+        middle_layout.addStretch()
 
-        controls = QtWidgets.QHBoxLayout()
-        self._refresh_btn = QtWidgets.QPushButton("Refresh State")
-        self._start_btn = QtWidgets.QPushButton("Start Scan")
-        self._stop_btn = QtWidgets.QPushButton("Stop Scan")
-        controls.addWidget(self._refresh_btn)
-        controls.addWidget(self._start_btn)
-        controls.addWidget(self._stop_btn)
-
-        root.addWidget(title)
-        root.addWidget(self._scanner_status)
-        root.addWidget(self._device_label)
-        root.addWidget(self._vehicle_label)
-        root.addWidget(self._shift_label)
-        root.addWidget(self._route_label)
-        root.addWidget(self._last_uid_label)
-        root.addWidget(self._result_box, 1)
-        root.addLayout(controls)
-
-        self._refresh_btn.clicked.connect(self._request_state)
-        self._start_btn.clicked.connect(self._start_scanning)
-        self._stop_btn.clicked.connect(self._stop_scanning)
-        self._set_scan_button_state(scanning=False)
+        # Combine sections
+        root.addLayout(top_layout)
+        root.addLayout(middle_layout, 1)
+        
+        # Initialize status
+        self._update_status_display()
 
     def _setup_api_worker(self) -> None:
         self._api_thread = QtCore.QThread(self)
@@ -96,9 +126,25 @@ class ValidatorApp(QtWidgets.QWidget):
         self._nfc_thread: QtCore.QThread | None = None
         self._nfc_worker: NfcWorker | None = None
 
-    def _set_scan_button_state(self, scanning: bool) -> None:
-        self._start_btn.setEnabled(not scanning)
-        self._stop_btn.setEnabled(scanning)
+    def _set_status(self, message: str, color: str, details: str = "") -> None:
+        """Update status display with message, color, and optional details."""
+        self._status_label.setText(message)
+        self._status_label.setStyleSheet(f"color: {color};")
+        self._details_label.setText(details)
+    
+    def _update_time(self) -> None:
+        """Update time label with current time."""
+        current_time = QtCore.QDateTime.currentDateTime().toString("HH:mm:ss")
+        self._time_label.setText(current_time)
+    
+    def _update_status_display(self) -> None:
+        """Update status display based on current state."""
+        if not self._shift_active:
+            self._set_status("Validator is unavailable", "red")
+        elif not self._scanner_available:
+            self._set_status("Scanner is out of order", "red")
+        else:
+            self._set_status("Please scan your card", "black")
 
     @QtCore.Slot()
     def _start_scanning(self) -> None:
@@ -116,8 +162,8 @@ class ValidatorApp(QtWidgets.QWidget):
         self._nfc_thread.finished.connect(self._on_scan_stopped)
 
         self._nfc_thread.start()
-        self._set_scan_button_state(scanning=True)
-        self._on_scanner_status("Starting scanner...")
+        self._scanner_available = True
+        self._update_status_display()
 
     @QtCore.Slot()
     def _stop_scanning(self) -> None:
@@ -132,22 +178,23 @@ class ValidatorApp(QtWidgets.QWidget):
     def _on_scan_stopped(self) -> None:
         self._nfc_worker = None
         self._nfc_thread = None
-        self._set_scan_button_state(scanning=False)
+        self._scanner_available = False
+        self._update_status_display()
 
     @QtCore.Slot(str)
     def _on_scanner_status(self, message: str) -> None:
-        self._scanner_status.setText(f"Scanner: {message}")
+        # Scanner status tracking for future use if needed
+        pass
 
     @QtCore.Slot(str)
     def _on_scanner_error(self, message: str) -> None:
-        self._scanner_status.setText(f"Scanner: {message}")
-        self._append_result(message)
+        self._scanner_available = False
+        self._update_status_display()
         self._stop_scanning()
 
     @QtCore.Slot(str)
     def _on_card_detected(self, uid: str) -> None:
-        self._last_uid_label.setText(f"Last card UID: {uid}")
-        self._append_result(f"Scanned card UID: {uid}")
+        self._set_status("Validating...", "black")
         self.request_validate.emit(uid)
 
     @QtCore.Slot()
@@ -156,66 +203,79 @@ class ValidatorApp(QtWidgets.QWidget):
 
     @QtCore.Slot(dict)
     def _on_state_loaded(self, payload: dict) -> None:
-        device = payload.get("device") or {}
-        vehicle = payload.get("vehicle") or {}
         shift = payload.get("transit_shift") or {}
 
-        self._device_label.setText(f"Device: {device.get('code', '-')}")
-        self._vehicle_label.setText(f"Vehicle: {vehicle.get('code', '-') if vehicle else '-'}")
-
         if shift:
+            self._shift_active = True
             route_id = shift.get("route_id")
-            self._shift_label.setText(f"Shift: active ({shift.get('id', '-')})")
 
             if route_id:
                 route_name = self._route_name_cache.get(route_id)
                 if route_name:
+                    self._current_route_name = route_name
                     self._route_label.setText(f"Route: {route_name}")
                 else:
+                    self._current_route_name = route_id
                     self._route_label.setText(f"Route: {route_id}")
                     self.request_route.emit(route_id)
             else:
+                self._current_route_name = "-"
                 self._route_label.setText("Route: -")
         else:
-            self._shift_label.setText("Shift: none")
+            self._shift_active = False
+            self._current_route_name = "-"
             self._route_label.setText("Route: -")
+        
+        self._update_status_display()
 
     @QtCore.Slot(str, str)
     def _on_route_loaded(self, route_id: str, route_name: str) -> None:
         self._route_name_cache[route_id] = route_name
+        self._current_route_name = route_name
         self._route_label.setText(f"Route: {route_name}")
 
     @QtCore.Slot(dict)
     def _on_validation_loaded(self, result: dict) -> None:
-        uid = result.get("uid", "-")
         if result.get("ok"):
+            self._last_validation_success = True
             payload = result.get("payload") or {}
             ticket = payload.get("ticket") or {}
             ticket_type = payload.get("ticket_type") or {}
-            message = (
-                f"VALID | UID {uid} | "
+            
+            details = (
                 f"Ticket {ticket.get('id', '-')[:8]} | "
-                f"Type {ticket_type.get('name', ticket_type.get('code', '-'))}"
+                f"Type: {ticket_type.get('name', ticket_type.get('code', '-'))}"
             )
-            self._append_result(message)
+            self._set_status("Ticket/Pass validated successfully", "green", details)
+            
+            # Reset to ready after 3 seconds
+            QtCore.QTimer.singleShot(3000, self._update_status_display)
         else:
+            self._last_validation_success = False
+            uid = result.get("uid", "-")
             detail = result.get("detail", "Validation failed")
             status = result.get("status_code")
+            
             if status is not None:
-                self._append_result(f"INVALID ({status}) | UID {uid} | {detail}")
+                error_msg = f"Validation failed ({status})"
             else:
-                self._append_result(f"INVALID | UID {uid} | {detail}")
+                error_msg = "Validation failed"
+            
+            self._set_status(error_msg, "red", detail)
+            
+            # Reset to ready after 3 seconds
+            QtCore.QTimer.singleShot(3000, self._update_status_display)
 
     @QtCore.Slot(str)
     def _on_api_error(self, message: str) -> None:
-        self._append_result(message)
-
-    def _append_result(self, text: str) -> None:
-        timestamp = QtCore.QDateTime.currentDateTime().toString("HH:mm:ss")
-        self._result_box.append(f"[{timestamp}] {text}")
+        self._set_status("API Error", "red", message)
+        
+        # Reset to previous state after 3 seconds
+        QtCore.QTimer.singleShot(3000, self._update_status_display)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self._state_timer.stop()
+        self._time_timer.stop()
 
         self._stop_scanning()
 
