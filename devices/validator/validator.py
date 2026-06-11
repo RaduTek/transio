@@ -24,8 +24,7 @@ class ValidatorApp(QtWidgets.QWidget):
         self._last_validation_success = False
 
         self.setWindowTitle("Transio Ticket Validator")
-        self.setWindowState(QtCore.Qt.WindowMaximized)
-        self.showFullScreen()
+        self.setFixedSize(480, 440)
 
         self._build_ui()
         self._setup_api_worker()
@@ -46,24 +45,25 @@ class ValidatorApp(QtWidgets.QWidget):
 
     def _build_ui(self) -> None:
         root = QtWidgets.QVBoxLayout(self)
-        root.setContentsMargins(40, 40, 40, 40)
-        root.setSpacing(20)
+        root.setContentsMargins(15, 15, 15, 15)
+        root.setSpacing(12)
 
         # Top section: Title, time, and route
         top_layout = QtWidgets.QVBoxLayout()
-        top_layout.setSpacing(15)
+        top_layout.setSpacing(8)
         
         title = QtWidgets.QLabel("Transio Ticket Validator")
         title_font = QtGui.QFont()
-        title_font.setPointSize(28)
+        title_font.setPointSize(18)
         title_font.setBold(True)
         title.setFont(title_font)
         title.setAlignment(QtCore.Qt.AlignCenter)
         
         info_layout = QtWidgets.QHBoxLayout()
+        info_layout.setSpacing(10)
         self._time_label = QtWidgets.QLabel("00:00:00")
         time_font = QtGui.QFont()
-        time_font.setPointSize(16)
+        time_font.setPointSize(11)
         self._time_label.setFont(time_font)
         
         self._route_label = QtWidgets.QLabel("Route: -")
@@ -78,11 +78,12 @@ class ValidatorApp(QtWidgets.QWidget):
 
         # Middle section: Status display
         middle_layout = QtWidgets.QVBoxLayout()
+        middle_layout.setSpacing(10)
         middle_layout.addStretch()
         
         self._status_label = QtWidgets.QLabel("Initializing...")
         status_font = QtGui.QFont()
-        status_font.setPointSize(48)
+        status_font.setPointSize(32)
         status_font.setBold(True)
         self._status_label.setFont(status_font)
         self._status_label.setAlignment(QtCore.Qt.AlignCenter)
@@ -91,7 +92,7 @@ class ValidatorApp(QtWidgets.QWidget):
         
         self._details_label = QtWidgets.QLabel("")
         details_font = QtGui.QFont()
-        details_font.setPointSize(16)
+        details_font.setPointSize(11)
         self._details_label.setFont(details_font)
         self._details_label.setAlignment(QtCore.Qt.AlignCenter)
         self._details_label.setWordWrap(True)
