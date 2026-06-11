@@ -147,6 +147,25 @@ export default function RouteDetailsPage() {
             case "stops":
                 return (
                     <ScrollView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+                        {/* Subroute Direction Card */}
+                        {selectedSubRoute && (
+                            <Card style={{ margin: 16, marginBottom: 0, backgroundColor: theme.colors.primaryContainer }}>
+                                <Card.Content>
+                                    <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
+                                        {selectedSubRoute.name}
+                                    </Text>
+                                    <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
+                                        {selectedSubRoute.code}
+                                    </Text>
+                                    {selectedSubRoute.description && (
+                                        <Text variant="bodySmall" style={{ marginTop: 4 }}>
+                                            {selectedSubRoute.description}
+                                        </Text>
+                                    )}
+                                </Card.Content>
+                            </Card>
+                        )}
+                        
                         <View style={{ marginHorizontal: 16, marginVertical: 16 }}>
                             <Text variant="titleMedium" style={{ fontWeight: "bold", marginBottom: 12 }}>
                                 Stops ({stops.length})
@@ -264,25 +283,6 @@ export default function RouteDetailsPage() {
                 </View>
             ) : (
                 <View style={{ flex: 1 }}>
-                    {/* Subroute Direction Card */}
-                    {selectedSubRoute && (
-                        <Card style={{ margin: 16, marginBottom: 0, backgroundColor: theme.colors.primaryContainer }}>
-                            <Card.Content>
-                                <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
-                                    {selectedSubRoute.name}
-                                </Text>
-                                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
-                                    {selectedSubRoute.code}
-                                </Text>
-                                {selectedSubRoute.description && (
-                                    <Text variant="bodySmall" style={{ marginTop: 4 }}>
-                                        {selectedSubRoute.description}
-                                    </Text>
-                                )}
-                            </Card.Content>
-                        </Card>
-                    )}
-
                     <BottomNavigation
                         navigationState={{ index: sceneIndex, routes: SCENE_ROUTES }}
                         onIndexChange={setSceneIndex}
