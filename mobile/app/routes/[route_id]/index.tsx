@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { ScrollView, View } from "react-native";
-import { Appbar, Card, ActivityIndicator, Text, useTheme, List, IconButton } from "react-native-paper";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect, useMemo } from "react";
+import { ScrollView, View, StyleSheet } from "react-native";
+import { Appbar, Card, ActivityIndicator, Text, useTheme, List, BottomNavigation } from "react-native-paper";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { fetchApi } from "@/helpers/net";
 import type { TransitRoute, TransitSubRoute, TransitStop, TransitSubRouteStop } from "@/types/transit";
@@ -10,11 +11,25 @@ interface SubRouteStopDetails extends TransitSubRouteStop {
     stop: TransitStop;
 }
 
+const DEFAULT_REGION = {
+    latitude: 45.7461,
+    longitude: 21.2218,
+    latitudeDelta: 0.1,
+    longitudeDelta: 0.1,
+};
+
+const SCENE_ROUTES = [
+    { key: "stops", title: "Stops", focusedIcon: "format-list-bulleted" },
+    { key: "map", title: "Map", focusedIcon: "map" },
+];
+
 export default function RouteDetailsPage() {
     const theme = useTheme();
     const router = useRouter();
+    const queryClient = useQueryClient();
     const { route_id } = useLocalSearchParams<{ route_id: string }>();
     const [selectedSubRouteIndex, setSelectedSubRouteIndex] = useState(0);
+    const [sceneIndex, setSceneIndex] = useState(0);
 
     // Fetch route information
     const { data: route, isLoading: routeLoading } = useQuery({
@@ -57,82 +72,61 @@ export default function RouteDetailsPage() {
         }
     }, [subRoutes, selectedSubRouteIndex]);
 
+    const mapRegion = useMemo(() => {
+        if (stops.length === 0) return DEFAULT_REGION;
+        const lats = stops.map((s) => s.stop.lat);
+        const lons = stops.map((s) => s.stop.lon);
+        const minLat = Math.min(...lats);
+        const maxLat = Math.max(...lats);
+        const minLon = Math.min(...lons);
+        const maxLon = Math.max(...lons);
+        return {
+            latitude: (minLat + maxLat) / 2,
+            longitude: (minLon + maxLon) / 2,
+            latitudeDelta: Math.max((maxLat - minLat) * 1.4, 0.01),
+            longitudeDelta: Math.max((maxLon - minLon) * 1.4, 0.01),
+        };
+    }, [stops]);
+
     const toggleDirection = () => {
         if (subRoutes.length > 0) {
             setSelectedSubRouteIndex((prev) => (prev + 1) % subRoutes.length);
         }
     };
 
+    const handleRefresh = () => {
+        queryClient.invalidateQueries({ queryKey: ["route", route_id] });
+        queryClient.invalidateQueries({ queryKey: ["route-subroutes", route_id] });
+        if (selectedSubRoute?.id) {
+            queryClient.invalidateQueries({ queryKey: ["subroute-stops", selectedSubRoute.id] });
+        }
+    };
+
     const isLoading = routeLoading || subRoutesLoading;
 
-    return (
-        <>
-            <Appbar.Header>
-                <Appbar.BackAction onPress={() => router.back()} />
-                <Appbar.Content 
-                    title={route?.name || "Route Details"} 
-                    subtitle={route?.code ? `Route ${route.code}` : undefined}
-                />
-                {subRoutes.length > 1 && (
-                    <Appbar.Action 
-                        icon="swap-vertical" 
-                        onPress={toggleDirection}
-                        disabled={isLoading}
-                    />
-                )}
-            </Appbar.Header>
-            <ScrollView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-                {isLoading ? (
-                    <View style={{ justifyContent: "center", alignItems: "center", height: 200 }}>
-                        <ActivityIndicator animating size="large" />
-                    </View>
-                ) : (
-                    <>
-
-                        {/* Subroute Direction Card */}
-                        {selectedSubRoute && (
-                            <Card style={{ margin: 16, backgroundColor: theme.colors.primaryContainer }}>
-                                <Card.Content>
-                                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                                        <View style={{ flex: 1 }}>
-                                            <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
-                                                {selectedSubRoute.name}
-                                            </Text>
-                                            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
-                                                {selectedSubRoute.code}
-                                            </Text>
-                                            {selectedSubRoute.description && (
-                                                <Text variant="bodySmall" style={{ marginTop: 4 }}>
-                                                    {selectedSubRoute.description}
-                                                </Text>
-                                            )}
-                                        </View>
-                                    </View>
-                                </Card.Content>
-                            </Card>
-                        )}
-
-                        {/* Stops List */}
-                        <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+    const renderScene = ({ route }: { route: { key: string } }) => {
+        switch (route.key) {
+            case "stops":
+                return (
+                    <ScrollView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+                        <View style={{ marginHorizontal: 16, marginVertical: 16 }}>
                             <Text variant="titleMedium" style={{ fontWeight: "bold", marginBottom: 12 }}>
                                 Stops ({stops.length})
                             </Text>
-                            
                             {stopsLoading ? (
                                 <View style={{ justifyContent: "center", alignItems: "center", height: 100 }}>
                                     <ActivityIndicator animating size="small" />
                                 </View>
                             ) : stops.length > 0 ? (
                                 <Card style={{ backgroundColor: theme.colors.surface }}>
-                                    {stops.map((stopDetails, index) => (
+                                    {stops.map((stopDetails) => (
                                         <View key={stopDetails.id}>
                                             <List.Item
                                                 title={stopDetails.stop.name}
-                                                description={stopDetails.stop.address || `Lat: ${stopDetails.stop.lat}, Lon: ${stopDetails.stop.lon}`}
-                                                left={(props) => (
+                                                left={() => (
                                                     <View style={{ justifyContent: "center", alignItems: "center", width: 40 }}>
                                                         <Text variant="titleMedium" style={{ fontWeight: "bold", color: theme.colors.primary }}>
-                                                            {stopDetails.stop_order}
+                                                            {stopDetails.stop_order + 1}
                                                         </Text>
                                                     </View>
                                                 )}
@@ -152,9 +146,96 @@ export default function RouteDetailsPage() {
                                 </Card>
                             )}
                         </View>
-                    </>
+                    </ScrollView>
+                );
+            case "map":
+                return (
+                    <View style={{ flex: 1 }}>
+                        {stopsLoading ? (
+                            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                                <ActivityIndicator animating size="large" />
+                            </View>
+                        ) : (
+                            <MapView
+                                style={StyleSheet.absoluteFillObject}
+                                initialRegion={mapRegion}
+                                provider={PROVIDER_GOOGLE}
+                            >
+                                {stops.map((stopDetails) => (
+                                    <Marker
+                                        key={stopDetails.id}
+                                        coordinate={{
+                                            latitude: stopDetails.stop.lat,
+                                            longitude: stopDetails.stop.lon,
+                                        }}
+                                        title={stopDetails.stop.name}
+                                        description={stopDetails.stop.description || stopDetails.stop.address}
+                                        pinColor="#0067b0"
+                                    />
+                                ))}
+                            </MapView>
+                        )}
+                    </View>
+                );
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <>
+            <Appbar.Header>
+                <Appbar.BackAction onPress={() => router.back()} />
+                <Appbar.Content
+                    title={route?.name || "Route Details"}
+                    subtitle={route?.code ? `Route ${route.code}` : undefined}
+                />
+                {subRoutes.length > 1 && (
+                    <Appbar.Action
+                        icon="swap-vertical"
+                        onPress={toggleDirection}
+                        disabled={isLoading}
+                    />
                 )}
-            </ScrollView>
+                <Appbar.Action
+                    icon="refresh"
+                    onPress={handleRefresh}
+                    disabled={isLoading}
+                />
+            </Appbar.Header>
+
+            {isLoading ? (
+                <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                    <ActivityIndicator animating size="large" />
+                </View>
+            ) : (
+                <View style={{ flex: 1 }}>
+                    {/* Subroute Direction Card */}
+                    {selectedSubRoute && (
+                        <Card style={{ margin: 16, marginBottom: 0, backgroundColor: theme.colors.primaryContainer }}>
+                            <Card.Content>
+                                <Text variant="titleMedium" style={{ fontWeight: "bold" }}>
+                                    {selectedSubRoute.name}
+                                </Text>
+                                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
+                                    {selectedSubRoute.code}
+                                </Text>
+                                {selectedSubRoute.description && (
+                                    <Text variant="bodySmall" style={{ marginTop: 4 }}>
+                                        {selectedSubRoute.description}
+                                    </Text>
+                                )}
+                            </Card.Content>
+                        </Card>
+                    )}
+
+                    <BottomNavigation
+                        navigationState={{ index: sceneIndex, routes: SCENE_ROUTES }}
+                        onIndexChange={setSceneIndex}
+                        renderScene={renderScene}
+                    />
+                </View>
+            )}
         </>
     );
 }
