@@ -1,4 +1,5 @@
 import time
+import threading
 from typing import Any
 
 import nfc
@@ -17,6 +18,8 @@ class NfcWorker(QtCore.QObject):
         self._stop_requested = False
         self._last_uid = ""
         self._last_seen_monotonic = 0.0
+        self._clf = None
+        self._clf_lock = threading.Lock()
 
     @QtCore.Slot()
     def run(self) -> None:
@@ -24,9 +27,11 @@ class NfcWorker(QtCore.QObject):
             self.scan_error.emit("TRANSIO_NFC_CONN_STRING is not configured")
             return
 
-        clf = None
+        self._stop_requested = False
         try:
             clf = nfc.ContactlessFrontend(self._nfc_conn_string)
+            with self._clf_lock:
+                self._clf = clf
             self.status_changed.emit(f"NFC scanner connected ({self._nfc_conn_string})")
 
             while not self._stop_requested:
@@ -51,18 +56,27 @@ class NfcWorker(QtCore.QObject):
                     terminate=lambda: self._stop_requested,
                 )
         except Exception as exc:  # noqa: BLE001
-            self.scan_error.emit(f"NFC scanner error: {exc}")
+            if not self._stop_requested:
+                self.scan_error.emit(f"NFC scanner error: {exc}")
         finally:
-            if clf is not None:
-                try:
-                    clf.close()
-                except Exception:
-                    pass
+            self._close_frontend()
             self.status_changed.emit("NFC scanner stopped")
 
     @QtCore.Slot()
     def stop(self) -> None:
         self._stop_requested = True
+        self._close_frontend()
+
+    def _close_frontend(self) -> None:
+        with self._clf_lock:
+            clf = self._clf
+            self._clf = None
+
+        if clf is not None:
+            try:
+                clf.close()
+            except Exception:
+                pass
 
     def _extract_uid(self, tag: Any) -> str:
         identifier = getattr(tag, "identifier", None)
