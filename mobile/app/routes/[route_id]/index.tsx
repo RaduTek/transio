@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
-import { Appbar, Card, ActivityIndicator, Text, useTheme, List, BottomNavigation } from "react-native-paper";
+import { Appbar, Card, ActivityIndicator, Text, useTheme, List, BottomNavigation, Icon } from "react-native-paper";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -9,6 +9,16 @@ import type { TransitRoute, TransitSubRoute, TransitStop, TransitSubRouteStop } 
 
 interface SubRouteStopDetails extends TransitSubRouteStop {
     stop: TransitStop;
+}
+
+interface SubRouteVehicle {
+    shift_id: string;
+    vehicle_id: string;
+    lat: number;
+    lon: number;
+    speed_kmph?: number;
+    heading_degrees?: number;
+    timestamp: string;
 }
 
 const DEFAULT_REGION = {
@@ -22,6 +32,21 @@ const SCENE_ROUTES = [
     { key: "stops", title: "Stops", focusedIcon: "format-list-bulleted" },
     { key: "map", title: "Map", focusedIcon: "map" },
 ];
+
+const styles = StyleSheet.create({
+    vehicleMarker: {
+        backgroundColor: "#e65100",
+        borderRadius: 20,
+        padding: 6,
+        borderWidth: 2,
+        borderColor: "white",
+        elevation: 4,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 2,
+    },
+});
 
 export default function RouteDetailsPage() {
     const theme = useTheme();
@@ -65,6 +90,18 @@ export default function RouteDetailsPage() {
         enabled: !!selectedSubRoute?.id,
     });
 
+    // Fetch active vehicles on the selected subroute
+    const { data: vehicles = [] } = useQuery({
+        queryKey: ["subroute-vehicles", selectedSubRoute?.id],
+        queryFn: async () => {
+            if (!selectedSubRoute?.id) return [];
+            const response = await fetchApi(`/public/subroutes/${selectedSubRoute.id}/vehicles`);
+            return response.json() as Promise<SubRouteVehicle[]>;
+        },
+        enabled: !!selectedSubRoute?.id,
+        refetchInterval: 15_000,
+    });
+
     // Reset to first subroute when subroutes change
     useEffect(() => {
         if (subRoutes.length > 0 && selectedSubRouteIndex >= subRoutes.length) {
@@ -99,6 +136,7 @@ export default function RouteDetailsPage() {
         queryClient.invalidateQueries({ queryKey: ["route-subroutes", route_id] });
         if (selectedSubRoute?.id) {
             queryClient.invalidateQueries({ queryKey: ["subroute-stops", selectedSubRoute.id] });
+            queryClient.invalidateQueries({ queryKey: ["subroute-vehicles", selectedSubRoute.id] });
         }
     };
 
@@ -172,6 +210,22 @@ export default function RouteDetailsPage() {
                                         description={stopDetails.stop.description || stopDetails.stop.address}
                                         pinColor="#0067b0"
                                     />
+                                ))}
+                                {vehicles.map((vehicle) => (
+                                    <Marker
+                                        key={vehicle.vehicle_id}
+                                        coordinate={{
+                                            latitude: vehicle.lat,
+                                            longitude: vehicle.lon,
+                                        }}
+                                        title={`Vehicle ${vehicle.vehicle_id.slice(0, 8)}`}
+                                        description={vehicle.speed_kmph != null ? `${vehicle.speed_kmph.toFixed(0)} km/h` : undefined}
+                                        anchor={{ x: 0.5, y: 0.5 }}
+                                    >
+                                        <View style={styles.vehicleMarker}>
+                                            <Icon source="bus" size={18} color="white" />
+                                        </View>
+                                    </Marker>
                                 ))}
                             </MapView>
                         )}

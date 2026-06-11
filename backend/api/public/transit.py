@@ -3,7 +3,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, or_, select
+from sqlmodel import Session, func, or_, select
 
 from backend.data.transit import (
     TransitCategory,
@@ -11,7 +11,9 @@ from backend.data.transit import (
     TransitStop,
     TransitSubRoute,
     TransitSubRouteStop,
+    TransitShift,
 )
+from backend.data.tracking import VehicleLocationLog
 from backend.database import get_session
 
 router = APIRouter(tags=["Transit info routes"])
@@ -215,6 +217,67 @@ def get_subroute_stops(
     return [
         {**subroute_stop.model_dump(), "stop": stop.model_dump()}
         for subroute_stop, stop in results
+    ]
+
+
+@router.get("/subroutes/{subroute_id_or_code}/vehicles")
+def get_subroute_vehicles(
+    subroute_id_or_code: str,
+    db_session: Session = Depends(get_session)
+) -> list[dict]:
+    """Get active vehicles on a subroute with their latest GPS location."""
+
+    subroute = _get_by_id_or_code_or_404(
+        db_session,
+        TransitSubRoute,
+        subroute_id_or_code,
+        "Transit subroute not found",
+    )
+
+    # Find active shifts for this subroute (shift not ended)
+    active_shifts_stmt = select(TransitShift).where(
+        TransitShift.subroute_id == subroute.id,
+        TransitShift.shift_end == None,  # noqa: E711
+    )
+    active_shifts = db_session.exec(active_shifts_stmt).all()
+
+    if not active_shifts:
+        return []
+
+    vehicle_ids = [s.vehicle_id for s in active_shifts]
+    shift_by_vehicle = {s.vehicle_id: s for s in active_shifts}
+
+    # Subquery: latest timestamp per vehicle
+    latest_ts_subq = (
+        select(
+            VehicleLocationLog.vehicle_id,
+            func.max(VehicleLocationLog.timestamp).label("max_ts"),
+        )
+        .where(VehicleLocationLog.vehicle_id.in_(vehicle_ids))
+        .group_by(VehicleLocationLog.vehicle_id)
+        .subquery()
+    )
+
+    # Join back to get full log rows
+    latest_locs_stmt = select(VehicleLocationLog).join(
+        latest_ts_subq,
+        (VehicleLocationLog.vehicle_id == latest_ts_subq.c.vehicle_id)
+        & (VehicleLocationLog.timestamp == latest_ts_subq.c.max_ts),
+    )
+    latest_locs = db_session.exec(latest_locs_stmt).all()
+
+    return [
+        {
+            "shift_id": shift_by_vehicle[loc.vehicle_id].id,
+            "vehicle_id": loc.vehicle_id,
+            "lat": loc.lat,
+            "lon": loc.lon,
+            "speed_kmph": loc.speed_kmph,
+            "heading_degrees": loc.heading_degrees,
+            "timestamp": loc.timestamp.isoformat(),
+        }
+        for loc in latest_locs
+        if loc.vehicle_id in shift_by_vehicle
     ]
 
 
