@@ -32,7 +32,7 @@ class ValidatorApp(QtWidgets.QWidget):
         self._setup_nfc_worker()
 
         self._state_timer = QtCore.QTimer(self)
-        self._state_timer.setInterval(30000)
+        self._state_timer.setInterval(10000)
         self._state_timer.timeout.connect(self._request_state)
         
         self._time_timer = QtCore.QTimer(self)
