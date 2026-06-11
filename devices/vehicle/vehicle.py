@@ -61,10 +61,11 @@ class VehicleObcApp(QtWidgets.QWidget):
         self._status_device = QtWidgets.QLabel("Device: -")
         self._status_vehicle = QtWidgets.QLabel("Vehicle: -")
         self._status_driver = QtWidgets.QLabel("Driver: awaiting badge")
-        self._status_shift = QtWidgets.QLabel("Shift: inactive")
         self._status_nfc = QtWidgets.QLabel("NFC: idle")
         self._status_gps = QtWidgets.QLabel("GPS: idle")
         self._status_telemetry = QtWidgets.QLabel("Telemetry: idle")
+        self._status_coords = QtWidgets.QLabel("Coordinates: -, -")
+        self._status_satellites = QtWidgets.QLabel("Satellites: 0")
 
         status_font = QtGui.QFont()
         status_font.setPointSize(14)
@@ -73,19 +74,24 @@ class VehicleObcApp(QtWidgets.QWidget):
             self._status_device,
             self._status_vehicle,
             self._status_driver,
-            self._status_shift,
             self._status_nfc,
             self._status_gps,
             self._status_telemetry,
+            self._status_coords,
+            self._status_satellites,
         ):
             label.setFont(status_font)
+            label.setMinimumHeight(42)
+            label.setStyleSheet("padding: 6px 10px; border-radius: 8px; background-color: #ffffff;")
 
         self._route_combo = QtWidgets.QComboBox()
-        self._route_combo.setMinimumHeight(52)
+        self._route_combo.setMinimumHeight(48)
+        self._route_combo.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self._route_combo.currentIndexChanged.connect(self._on_route_changed)
 
         self._subroute_combo = QtWidgets.QComboBox()
-        self._subroute_combo.setMinimumHeight(52)
+        self._subroute_combo.setMinimumHeight(48)
+        self._subroute_combo.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
 
         self._start_shift_btn = QtWidgets.QPushButton("Start Shift")
         self._end_shift_btn = QtWidgets.QPushButton("End Shift")
@@ -109,9 +115,29 @@ class VehicleObcApp(QtWidgets.QWidget):
         self._logout_btn.clicked.connect(self._on_logout_clicked)
         self._refresh_btn.clicked.connect(self._request_state)
 
-        route_form = QtWidgets.QFormLayout()
-        route_form.addRow("Route", self._route_combo)
-        route_form.addRow("Subroute", self._subroute_combo)
+        row1 = QtWidgets.QHBoxLayout()
+        row1.setSpacing(10)
+        row1.addWidget(self._status_device)
+        row1.addWidget(self._status_vehicle)
+        row1.addWidget(self._status_driver)
+
+        row2 = QtWidgets.QHBoxLayout()
+        row2.setSpacing(10)
+        row2.addWidget(self._status_nfc)
+        row2.addWidget(self._status_gps)
+        row2.addWidget(self._status_telemetry)
+
+        gps_details = QtWidgets.QHBoxLayout()
+        gps_details.setSpacing(10)
+        gps_details.addWidget(self._status_coords)
+        gps_details.addWidget(self._status_satellites)
+
+        route_row = QtWidgets.QHBoxLayout()
+        route_row.setSpacing(10)
+        route_row.addWidget(QtWidgets.QLabel("Route"))
+        route_row.addWidget(self._route_combo, 1)
+        route_row.addWidget(QtWidgets.QLabel("Subroute"))
+        route_row.addWidget(self._subroute_combo, 1)
 
         controls = QtWidgets.QHBoxLayout()
         controls.setSpacing(10)
@@ -125,14 +151,10 @@ class VehicleObcApp(QtWidgets.QWidget):
         self._log_box.setPlaceholderText("Operational events will appear here")
 
         root.addWidget(title)
-        root.addWidget(self._status_device)
-        root.addWidget(self._status_vehicle)
-        root.addWidget(self._status_driver)
-        root.addWidget(self._status_shift)
-        root.addWidget(self._status_nfc)
-        root.addWidget(self._status_gps)
-        root.addWidget(self._status_telemetry)
-        root.addLayout(route_form)
+        root.addLayout(row1)
+        root.addLayout(row2)
+        root.addLayout(gps_details)
+        root.addLayout(route_row)
         root.addLayout(controls)
         root.addWidget(self._log_box, 1)
 
@@ -243,6 +265,7 @@ class VehicleObcApp(QtWidgets.QWidget):
 
         self._gps_thread.started.connect(self._gps_worker.run)
         self._gps_worker.status_changed.connect(self._on_gps_status)
+        self._gps_worker.fix_updated.connect(self._on_gps_fix_updated)
         self._gps_worker.gps_error.connect(self._append_log)
         self._gps_worker.telemetry_skipped.connect(self._on_telemetry_skipped)
         self._gps_worker.telemetry_ready.connect(self.request_telemetry.emit)
@@ -275,11 +298,7 @@ class VehicleObcApp(QtWidgets.QWidget):
             self._status_driver.setText("Driver: awaiting badge")
 
         if shift:
-            route_id = shift.get("route_id", "-")
-            self._status_shift.setText(f"Shift: active ({route_id})")
             self._append_log("Active shift loaded from server state")
-        else:
-            self._status_shift.setText("Shift: inactive")
 
         self._refresh_ui_state()
 
@@ -342,7 +361,6 @@ class VehicleObcApp(QtWidgets.QWidget):
         payload = result.get("payload") or {}
         shift = payload.get("transit_shift")
         self._active_shift = shift
-        self._status_shift.setText(f"Shift: active ({shift.get('route_id', '-') if shift else '-'})")
         self._append_log("Shift started")
         self._refresh_ui_state()
 
@@ -353,7 +371,6 @@ class VehicleObcApp(QtWidgets.QWidget):
             return
 
         self._active_shift = None
-        self._status_shift.setText("Shift: inactive")
         self._append_log("Shift ended")
         self._refresh_ui_state()
 
@@ -370,7 +387,6 @@ class VehicleObcApp(QtWidgets.QWidget):
         self._driver = None
         self._active_shift = None
         self._status_driver.setText("Driver: awaiting badge")
-        self._status_shift.setText("Shift: inactive")
         self._append_log("Driver logged out")
         self._refresh_ui_state()
 
@@ -391,6 +407,22 @@ class VehicleObcApp(QtWidgets.QWidget):
     @QtCore.Slot(str)
     def _on_gps_status(self, status: str) -> None:
         self._status_gps.setText(f"GPS: {status}")
+
+    @QtCore.Slot(dict)
+    def _on_gps_fix_updated(self, fix: dict) -> None:
+        lat = fix.get("lat")
+        lon = fix.get("lon")
+        satellites = fix.get("satellites")
+
+        if lat is not None and lon is not None:
+            self._status_coords.setText(f"Coordinates: {lat:.6f}, {lon:.6f}")
+        else:
+            self._status_coords.setText("Coordinates: no fix")
+
+        if satellites is not None:
+            self._status_satellites.setText(f"Satellites: {satellites}")
+        else:
+            self._status_satellites.setText("Satellites: 0")
 
     @QtCore.Slot(str)
     def _on_telemetry_skipped(self, reason: str) -> None:

@@ -9,6 +9,7 @@ from PySide6 import QtCore
 
 class GpsWorker(QtCore.QObject):
     status_changed = QtCore.Signal(str)
+    fix_updated = QtCore.Signal(dict)
     telemetry_ready = QtCore.Signal(dict)
     telemetry_skipped = QtCore.Signal(str)
     gps_error = QtCore.Signal(str)
@@ -50,7 +51,10 @@ class GpsWorker(QtCore.QObject):
 
                     parsed = self._parse_nmea_line(line)
                     if parsed:
-                        self._latest_fix = parsed
+                        if self._latest_fix is None:
+                            self._latest_fix = {}
+                        self._latest_fix.update(parsed)
+                        self.fix_updated.emit(dict(self._latest_fix))
                         self._maybe_emit_telemetry()
             except Exception as exc:  # noqa: BLE001
                 self.gps_error.emit(f"GPS read error: {exc}")
@@ -101,6 +105,7 @@ class GpsWorker(QtCore.QObject):
             "lon": lon,
             "speed_kmph": speed,
             "heading_degrees": self._latest_fix.get("heading_degrees"),
+            "satellites": self._latest_fix.get("satellites"),
         }
 
         self._last_emit_monotonic = now_mono
@@ -145,11 +150,12 @@ class GpsWorker(QtCore.QObject):
         }
 
     def _parse_gga(self, parts: list[str]) -> dict | None:
-        if len(parts) < 6:
+        if len(parts) < 8:
             return None
 
         lat = _parse_nmea_lat_lon(parts[2], parts[3])
         lon = _parse_nmea_lat_lon(parts[4], parts[5])
+        satellites = _safe_int(parts[7])
 
         return {
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -157,6 +163,7 @@ class GpsWorker(QtCore.QObject):
             "lon": lon,
             "speed_kmph": None,
             "heading_degrees": None,
+            "satellites": satellites,
         }
 
 
@@ -166,6 +173,16 @@ def _safe_float(value: str) -> float | None:
 
     try:
         return float(value)
+    except ValueError:
+        return None
+
+
+def _safe_int(value: str) -> int | None:
+    if not value:
+        return None
+
+    try:
+        return int(value)
     except ValueError:
         return None
 
