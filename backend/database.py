@@ -2,14 +2,10 @@ import os
 
 from sqlmodel import Session, create_engine
 
-
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+psycopg://transio:transio@localhost:5432/transio",
-)
+from .config import settings
 
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+engine = create_engine(settings.database_url, pool_pre_ping=True)
 
 
 def get_session():

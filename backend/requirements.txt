@@ -4,3 +4,4 @@ sqlalchemy>=2.0.50
 psycopg[binary]>=3.1.19
 pwdlib[argon2]>=0.3.0
 pyjwt>=2.13.0
+pydantic-settings>=2.14.1

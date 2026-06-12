@@ -8,6 +8,7 @@ from .database import engine
 from .api import router as api_router
 
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     SQLModel.metadata.create_all(bind=engine)
