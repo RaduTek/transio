@@ -1,9 +1,12 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
+import { clearToken } from '../../../helpers/auth'
 
 export const Route = createFileRoute('/_auth/logout')({
-  component: RouteComponent,
+    component: RouteComponent,
 })
 
 function RouteComponent() {
-  return <Navigate to="/login" />
+    clearToken()
+
+    return <Navigate to="/login" />
 }

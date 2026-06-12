@@ -8,10 +8,10 @@ import {
     TextField,
     Typography,
 } from '@mui/material'
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Navigate, useRouter } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from '@tanstack/react-form'
-import { saveToken } from '../../../helpers/auth'
+import { isTokenSaved, saveToken } from '../../../helpers/auth'
 import { fetchApi, postJSON } from '../../../helpers/net'
 import type { Employee } from '../../../types/users'
 
@@ -42,7 +42,7 @@ function LoginPage() {
             loginRequest(email, password),
         onSuccess: ({ token }) => {
             saveToken(token)
-            router.navigate({ to: '/' })
+            router.navigate({ to: '/home' })
         },
     })
 
@@ -50,6 +50,10 @@ function LoginPage() {
         defaultValues: { email: '', password: '' },
         onSubmit: ({ value }) => mutation.mutate(value),
     })
+
+    if (isTokenSaved()) {
+        return <Navigate to="/home" />
+    }
 
     return (
         <Box
