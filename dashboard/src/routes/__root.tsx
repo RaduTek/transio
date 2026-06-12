@@ -5,16 +5,16 @@ import { queryClient } from '../config/queryClient'
 import { theme } from '../theme'
 
 export const Route = new RootRoute({
-  component: RootLayout,
+    component: RootLayout,
 })
 
 function RootLayout() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Outlet />
-      </ThemeProvider>
-    </QueryClientProvider>
-  )
+    return (
+        <QueryClientProvider client={queryClient}>
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
+                <Outlet />
+            </ThemeProvider>
+        </QueryClientProvider>
+    )
 }

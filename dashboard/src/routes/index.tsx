@@ -1,30 +1,15 @@
-import { Box, Container, Typography } from '@mui/material'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Navigate } from '@tanstack/react-router'
+import { isTokenSaved } from '../../helpers/auth'
 
 export const Route = createFileRoute('/')({
-  component: Index,
+    component: Index,
 })
 
+// eslint-disable-next-line react-refresh/only-export-components
 function Index() {
-  return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-          gap: 2,
-        }}
-      >
-        <Typography variant="h3" component="h1">
-          Welcome to Dashboard
-        </Typography>
-        <Typography variant="body1" color="textSecondary">
-          Your dashboard is ready to go!
-        </Typography>
-      </Box>
-    </Container>
-  )
+    if (isTokenSaved()) {
+        return <Navigate to="/home" />
+    }
+
+    return <Navigate to="/login" />
 }
