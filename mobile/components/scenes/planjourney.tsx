@@ -74,7 +74,7 @@ export default function PlanJourneyScene() {
 
     const planMutation = useMutation({
         mutationFn: async (stopIds: string[]) => {
-            const res = await fetchWithAuth("/plan_journey", postJSON({ stop_ids: stopIds }));
+            const res = await fetchWithAuth("/mobile/plan_journey", postJSON({ stop_ids: stopIds }));
             if (!res.ok) {
                 const txt = await res.text();
                 throw new Error(`Plan failed (${res.status}): ${txt}`);
