@@ -38,12 +38,12 @@ const styles = StyleSheet.create({
         width: 14,
         height: 14,
         borderRadius: 7,
-        backgroundColor: "#000",
+        backgroundColor: "#1d5ebe",
         borderWidth: 2,
         borderColor: "#fff",
     },
     vehicleMarker: {
-        backgroundColor: "#0d6efd",
+        backgroundColor: "#ea2323",
         borderRadius: 20,
         padding: 6,
         borderWidth: 2,
@@ -253,7 +253,7 @@ export default function RouteDetailsPage() {
                                         }}
                                         title={stopDetails.stop.name}
                                         description={stopDetails.stop.description || stopDetails.stop.address}
-                                        anchor={{ x: 0.5, y: 0.5 }}
+                                        anchor={{ x: 0.25, y: 0.25 }}
                                     >
                                         <View style={styles.stopMarker} />
                                     </Marker>
