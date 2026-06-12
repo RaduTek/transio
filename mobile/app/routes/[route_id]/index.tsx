@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
 import { Appbar, Card, ActivityIndicator, Text, useTheme, List, BottomNavigation, Icon } from "react-native-paper";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { fetchApi } from "@/helpers/net";
@@ -34,8 +34,16 @@ const SCENE_ROUTES = [
 ];
 
 const styles = StyleSheet.create({
+    stopMarker: {
+        width: 14,
+        height: 14,
+        borderRadius: 7,
+        backgroundColor: "#000",
+        borderWidth: 2,
+        borderColor: "#fff",
+    },
     vehicleMarker: {
-        backgroundColor: "#e65100",
+        backgroundColor: "#0d6efd",
         borderRadius: 20,
         padding: 6,
         borderWidth: 2,
@@ -124,6 +132,17 @@ export default function RouteDetailsPage() {
             longitudeDelta: Math.max((maxLon - minLon) * 1.4, 0.01),
         };
     }, [stops]);
+
+    const orderedStops = useMemo(() => {
+        return [...stops].sort((a, b) => a.stop_order - b.stop_order);
+    }, [stops]);
+
+    const stopLineCoordinates = useMemo(() => {
+        return orderedStops.map((stopDetails) => ({
+            latitude: stopDetails.stop.lat,
+            longitude: stopDetails.stop.lon,
+        }));
+    }, [orderedStops]);
 
     const toggleDirection = () => {
         if (subRoutes.length > 0) {
@@ -218,7 +237,14 @@ export default function RouteDetailsPage() {
                                 initialRegion={mapRegion}
                                 provider={PROVIDER_GOOGLE}
                             >
-                                {stops.map((stopDetails) => (
+                                {stopLineCoordinates.length > 1 && (
+                                    <Polyline
+                                        coordinates={stopLineCoordinates}
+                                        strokeColor="#000"
+                                        strokeWidth={3}
+                                    />
+                                )}
+                                {orderedStops.map((stopDetails) => (
                                     <Marker
                                         key={stopDetails.id}
                                         coordinate={{
@@ -227,8 +253,10 @@ export default function RouteDetailsPage() {
                                         }}
                                         title={stopDetails.stop.name}
                                         description={stopDetails.stop.description || stopDetails.stop.address}
-                                        pinColor="#0067b0"
-                                    />
+                                        anchor={{ x: 0.5, y: 0.5 }}
+                                    >
+                                        <View style={styles.stopMarker} />
+                                    </Marker>
                                 ))}
                                 {vehicles.map((vehicle) => (
                                     <Marker
@@ -242,7 +270,7 @@ export default function RouteDetailsPage() {
                                         anchor={{ x: 0.5, y: 0.5 }}
                                     >
                                         <View style={styles.vehicleMarker}>
-                                            <Icon source="bus" size={18} color="white" />
+                                            <Icon source="bus" size={18} color="#fff" />
                                         </View>
                                     </Marker>
                                 ))}
