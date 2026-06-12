@@ -1,6 +1,6 @@
 import { getSavedToken } from "./auth";
 
-const apiBaseUrl = "/api";
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "/api";
 
 export function fetchApi(endpoint: string, options?: RequestInit) : Promise<Response> {
     return fetch(`${apiBaseUrl}${endpoint}`, options);
