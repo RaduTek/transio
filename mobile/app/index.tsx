@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
 import RoutesScene from "@/components/scenes/routes";
-import MapScene from "@/components/scenes/map";
+import PlanJourneyScene from "@/components/scenes/planjourney";
 import SearchScene from "@/components/scenes/search";
 import ProfileScene from "@/components/scenes/profile";
 
 const routes = [
   { key: 'routes', title: 'Routes', focusedIcon: 'routes' },
-  { key: 'map', title: 'Map', focusedIcon: 'map' },
+  { key: 'plan', title: 'Plan', focusedIcon: 'map-marker-path' },
   // { key: 'search', title: 'Search', focusedIcon: 'magnify' },
   { key: 'profile', title: 'Profile', focusedIcon: 'account', unfocusedIcon: 'account-outline' },
 ];
@@ -17,7 +17,7 @@ export default function MainLayout() {
 
     const renderScene = BottomNavigation.SceneMap({
       routes: RoutesScene,
-      map: MapScene,
+      plan: PlanJourneyScene,
       search: SearchScene,
       profile: ProfileScene,
     });
