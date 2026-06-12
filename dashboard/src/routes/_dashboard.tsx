@@ -1,6 +1,7 @@
 import {
     AppBar,
     Box,
+    Button,
     Divider,
     Drawer,
     List,
@@ -16,7 +17,7 @@ import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber'
 import BuildIcon from '@mui/icons-material/Build'
 import PeopleIcon from '@mui/icons-material/People'
 import DashboardIcon from '@mui/icons-material/Dashboard'
-import { createFileRoute, Link, Outlet, useRouterState } from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet, useRouter, useRouterState } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_dashboard')({
     component: DashboardLayout,
@@ -33,6 +34,8 @@ const navItems = [
 ]
 
 function DashboardLayout() {
+    const router = useRouter()
+    
     const pathname = useRouterState({ select: (s) => s.location.pathname })
 
     return (
@@ -45,6 +48,10 @@ function DashboardLayout() {
                     <Typography variant="h6" noWrap component="div">
                         Transio Admin
                     </Typography>
+                    <Box sx={{ flexGrow: 1 }} />
+                    <Button color="inherit" onClick={() => router.navigate({ to: '/logout' })}>
+                        Logout
+                    </Button>
                 </Toolbar>
             </AppBar>
 
