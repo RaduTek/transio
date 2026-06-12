@@ -13,6 +13,7 @@ import {
     Typography,
 } from '@mui/material'
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus'
+import DepartureBoardIcon from '@mui/icons-material/DepartureBoard'
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber'
 import BuildIcon from '@mui/icons-material/Build'
 import PeopleIcon from '@mui/icons-material/People'
@@ -26,16 +27,18 @@ export const Route = createFileRoute('/_dashboard')({
 const DRAWER_WIDTH = 240
 
 const navItems = [
-    { label: 'Overview', to: '/dashboard/home', icon: <DashboardIcon /> },
-    { label: 'Transit', to: '/dashboard/transit', icon: <DirectionsBusIcon /> },
-    { label: 'Ticketing', to: '/dashboard/ticketing', icon: <ConfirmationNumberIcon /> },
-    { label: 'Assets', to: '/dashboard/assets', icon: <BuildIcon /> },
-    { label: 'Users', to: '/dashboard/users', icon: <PeopleIcon /> },
+    { label: 'Overview', to: '/home', icon: <DashboardIcon /> },
+    { label: 'Transit', to: '/transit', icon: <DepartureBoardIcon /> },
+    { label: 'Ticketing', to: '/ticketing', icon: <ConfirmationNumberIcon /> },
+    { label: 'Vehicles', to: '/vehicles', icon: <DirectionsBusIcon /> },
+    { label: 'Assets', to: '/assets', icon: <BuildIcon /> },
+    { label: 'Users', to: '/users', icon: <PeopleIcon /> },
 ]
 
+// eslint-disable-next-line react-refresh/only-export-components
 function DashboardLayout() {
     const router = useRouter()
-    
+
     const pathname = useRouterState({ select: (s) => s.location.pathname })
 
     return (
